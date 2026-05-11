@@ -50,7 +50,7 @@ export async function commitAction() {
           message: 'O que deseja fazer?',
           choices: [
             { name: '✅ Aceitar e commitar', value: 'commit' },
-            { name: '✏️ Editar mensagem', value: 'edit' },
+            { name: '✍️  Escrever manualmente', value: 'edit' },
             { name: '🔄 Regenerar', value: 'regenerate' },
             { name: '❌ Cancelar', value: 'cancel' },
           ],
@@ -66,11 +66,13 @@ export async function commitAction() {
           {
             type: 'input',
             name: 'editedMessage',
-            message: 'Edite a mensagem de commit:',
-            default: currentMessage,
+            message: 'Digite a nova mensagem de commit:',
           },
         ]);
-        currentMessage = editedMessage;
+        
+        if (editedMessage.trim()) {
+          currentMessage = editedMessage;
+        }
       } else if (action === 'regenerate') {
         currentMessage = ''; // Limpa para forçar uma nova geração no próximo loop
       } else if (action === 'cancel') {
