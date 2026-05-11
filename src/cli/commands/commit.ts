@@ -27,14 +27,16 @@ export async function commitAction() {
     let confirmed = false;
 
     while (!confirmed) {
-      const spinner = logger.spinner(`Gerando mensagem com ${config.provider}...`);
-      try {
-        currentMessage = await provider.generateCommitMessage(truncatedDiff);
-        spinner.succeed('Mensagem gerada!\n');
-      } catch (error: any) {
-        spinner.fail('Erro ao gerar mensagem.');
-        logger.error(error.message);
-        return;
+      if (!currentMessage) {
+        const spinner = logger.spinner(`Gerando mensagem com ${config.provider}...`);
+        try {
+          currentMessage = await provider.generateCommitMessage(truncatedDiff);
+          spinner.succeed('Mensagem gerada!\n');
+        } catch (error: any) {
+          spinner.fail('Erro ao gerar mensagem.');
+          logger.error(error.message);
+          return;
+        }
       }
 
       console.log(Buffer.alloc(40, '-').toString());
@@ -62,20 +64,19 @@ export async function commitAction() {
       } else if (action === 'edit') {
         const { editedMessage } = await inquirer.prompt([
           {
-            type: 'editor',
+            type: 'input',
             name: 'editedMessage',
             message: 'Edite a mensagem de commit:',
             default: currentMessage,
           },
         ]);
-        await gitManager.commit(editedMessage);
-        logger.success('Commit realizado com sucesso!');
-        confirmed = true;
+        currentMessage = editedMessage;
+      } else if (action === 'regenerate') {
+        currentMessage = ''; // Limpa para forçar uma nova geração no próximo loop
       } else if (action === 'cancel') {
         logger.info('Operação cancelada.');
         confirmed = true;
       }
-      // Se for 'regenerate', o loop continua e chama a IA novamente
     }
   } catch (error: any) {
     logger.error(error.message);
