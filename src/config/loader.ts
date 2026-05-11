@@ -3,13 +3,13 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { ConfigSchema, CommitAIConfig } from './schema';
 
-// Carrega as variáveis de ambiente do arquivo .env (se existir)
 dotenv.config();
 
-/**
- * Lê o arquivo de configuração local do projeto e faz o merge com variáveis de ambiente.
- * Retorna a configuração validada via Zod.
- */
+/*
+  Lê o arquivo de configuração local do projeto e faz o merge com variáveis de ambiente.
+  Retorna a configuração validada via Zod.
+*/
+
 export function loadConfig(): CommitAIConfig {
   const configPath = path.resolve(process.cwd(), '.commitai', 'config.json');
   let rawConfig: Partial<CommitAIConfig> = {};
@@ -19,11 +19,12 @@ export function loadConfig(): CommitAIConfig {
       const fileContent = fs.readFileSync(configPath, 'utf-8');
       rawConfig = JSON.parse(fileContent);
     } catch (error) {
-      console.warn(`[CommitAI] Warning: Could not parse ${configPath}. Using defaults.`);
+      console.warn(
+        `[CommitAI] Warning: Could not parse ${configPath}. Using defaults.`,
+      );
     }
   }
 
-  // Precedência: Variável de ambiente > Arquivo de configuração
   const apiKey = process.env.COMMITAI_API_KEY || rawConfig.apiKey;
 
   const mergedConfig = {
@@ -36,7 +37,7 @@ export function loadConfig(): CommitAIConfig {
 
   if (!result.success) {
     console.error('[CommitAI] Error: Invalid configuration.');
-    result.error.errors.forEach(err => {
+    result.error.errors.forEach((err) => {
       console.error(`  - ${err.path.join('.')}: ${err.message}`);
     });
     process.exit(1);
