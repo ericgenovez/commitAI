@@ -1,3 +1,4 @@
+import inquirer from 'inquirer';
 import { gitManager } from '../../core/git';
 import { loadConfig } from '../../config/loader';
 import { ProviderFactory } from '../../providers/factory';
@@ -5,46 +6,78 @@ import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 
 export async function commitAction() {
-  const spinner = logger.spinner('Iniciando processo de commit...');
-
   try {
     const config = loadConfig();
-    
+
     if (!(await gitManager.isRepo())) {
-      spinner.stop();
       logger.error('Diretório atual não é um repositório Git.');
       return;
     }
 
-    spinner.text = 'Lendo alterações no stage...';
     const diff = await gitManager.getStagedDiff();
-
     if (!diff) {
-      spinner.stop();
       logger.warn('Nenhuma alteração encontrada no stage. Use "git add" primeiro.');
       return;
     }
 
     const truncatedDiff = truncateDiff(diff, config.maxDiffLines);
-
-    spinner.text = `Gerando mensagem com ${config.provider}...`;
-    
-    if (!config.apiKey && config.provider !== 'ollama') {
-        spinner.stop();
-        logger.error('API Key não configurada. Verifique seu arquivo .env ou config.json.');
-        return;
-    }
-
     const provider = ProviderFactory.getProvider(config);
-    const commitMessage = await provider.generateCommitMessage(truncatedDiff);
 
-    spinner.succeed('Mensagem gerada com sucesso!\n');
-    console.log(commitMessage);
-    console.log('\n' + Buffer.alloc(40, '-').toString());
-    logger.info('Dica: Na próxima fase, você poderá aceitar e commitar automaticamente.');
+    let currentMessage = '';
+    let confirmed = false;
 
+    while (!confirmed) {
+      const spinner = logger.spinner(`Gerando mensagem com ${config.provider}...`);
+      try {
+        currentMessage = await provider.generateCommitMessage(truncatedDiff);
+        spinner.succeed('Mensagem gerada!\n');
+      } catch (error: any) {
+        spinner.fail('Erro ao gerar mensagem.');
+        logger.error(error.message);
+        return;
+      }
+
+      console.log(Buffer.alloc(40, '-').toString());
+      console.log(currentMessage);
+      console.log(Buffer.alloc(40, '-').toString() + '\n');
+
+      const { action } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: 'O que deseja fazer?',
+          choices: [
+            { name: '✅ Aceitar e commitar', value: 'commit' },
+            { name: '✏️ Editar mensagem', value: 'edit' },
+            { name: '🔄 Regenerar', value: 'regenerate' },
+            { name: '❌ Cancelar', value: 'cancel' },
+          ],
+        },
+      ]);
+
+      if (action === 'commit') {
+        await gitManager.commit(currentMessage);
+        logger.success('Commit realizado com sucesso!');
+        confirmed = true;
+      } else if (action === 'edit') {
+        const { editedMessage } = await inquirer.prompt([
+          {
+            type: 'editor',
+            name: 'editedMessage',
+            message: 'Edite a mensagem de commit:',
+            default: currentMessage,
+          },
+        ]);
+        await gitManager.commit(editedMessage);
+        logger.success('Commit realizado com sucesso!');
+        confirmed = true;
+      } else if (action === 'cancel') {
+        logger.info('Operação cancelada.');
+        confirmed = true;
+      }
+      // Se for 'regenerate', o loop continua e chama a IA novamente
+    }
   } catch (error: any) {
-    spinner.fail('Erro ao gerar mensagem de commit.');
     logger.error(error.message);
   }
 }

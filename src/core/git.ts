@@ -36,13 +36,13 @@ export class GitManager {
   }
 
   /**
-   * Retorna o diff entre a branch atual e uma branch de destino (ex: main).
+   * Realiza o commit das alterações no stage com a mensagem fornecida.
    */
-  async getBranchDiff(targetBranch: string): Promise<string> {
+  async commit(message: string): Promise<void> {
     try {
-      return await this.git.diff([`${targetBranch}...HEAD`]);
+      await this.git.commit(message);
     } catch (error) {
-      throw new Error(`Falha ao obter o diff com a branch ${targetBranch}.`);
+      throw new Error('Falha ao realizar o commit.');
     }
   }
 }
