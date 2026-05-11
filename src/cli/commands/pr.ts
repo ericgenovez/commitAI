@@ -4,6 +4,7 @@ import { loadConfig } from '../../config/loader';
 import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
+import { clipboard } from '../../utils/clipboard';
 
 export async function prAction() {
   try {
@@ -68,7 +69,7 @@ export async function prAction() {
           name: 'action',
           message: 'O que deseja fazer?',
           choices: [
-            { name: '✅ Copiar para o clipboard (em breve)', value: 'copy' },
+            { name: '✅ Copiar para o clipboard', value: 'copy' },
             { name: '✍️  Reescrever manualmente', value: 'edit' },
             { name: '🔄 Regenerar', value: 'regenerate' },
             { name: '❌ Cancelar', value: 'cancel' },
@@ -77,9 +78,13 @@ export async function prAction() {
       ]);
 
       if (action === 'copy') {
-        // Implementaremos o clipboard na fase de polimento
-        logger.info('Texto exibido acima. Copie manualmente por enquanto.');
-        confirmed = true;
+        try {
+          await clipboard.copy(currentPRDescription);
+          logger.success('Descrição copiada para o clipboard!');
+          confirmed = true;
+        } catch (error: any) {
+          logger.error('Falha ao copiar: ' + error.message);
+        }
       } else if (action === 'edit') {
         const { editedPR } = await inquirer.prompt([
           {
