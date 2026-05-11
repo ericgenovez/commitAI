@@ -1,57 +1,44 @@
 import OpenAI from 'openai';
 import { AIProvider, ProviderOptions } from './base';
+import { PromptBuilder } from '../core/prompt-builder';
+import { Formatter } from '../core/formatter';
+import { CommitAIConfig } from '../config/schema';
 
 export class OpenAIProvider implements AIProvider {
   private client: OpenAI;
-  private model: string;
-  private language: string;
+  private config: ProviderOptions & { projectContext?: string; prSections: string[] };
 
-  constructor(options: ProviderOptions) {
+  constructor(options: ProviderOptions & { projectContext?: string; prSections: string[] }) {
     this.client = new OpenAI({ apiKey: options.apiKey });
-    this.model = options.model;
-    this.language = options.language;
+    this.config = options;
   }
 
-  async generateCommitMessage(diff: string, context?: string): Promise<string> {
-    const prompt = this.buildCommitPrompt(diff, context);
+  async generateCommitMessage(diff: string): Promise<string> {
+    const prompt = PromptBuilder.buildCommitPrompt(diff, {
+      language: this.config.language,
+      projectContext: this.config.projectContext,
+    } as CommitAIConfig);
     
     const response = await this.client.chat.completions.create({
-      model: this.model,
+      model: this.config.model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
     });
 
-    return response.choices[0].message.content || '';
+    const rawContent = response.choices[0].message.content || '';
+    return Formatter.cleanResponse(rawContent);
   }
 
-  async generatePRDescription(diff: string, sections: string[]): Promise<string> {
-    const prompt = this.buildPRPrompt(diff, sections);
+  async generatePRDescription(diff: string): Promise<string> {
+    const prompt = PromptBuilder.buildPRPrompt(diff, this.config.prSections, this.config.language);
 
     const response = await this.client.chat.completions.create({
-      model: this.model,
+      model: this.config.model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
     });
 
-    return response.choices[0].message.content || '';
-  }
-
-  private buildCommitPrompt(diff: string, context?: string): string {
-    return `Generate a conventional commit message in ${this.language} for the following diff:
-${diff}
-${context ? `\nContext: ${context}` : ''}
-
-Rules:
-- Use <type>(<scope>): <subject> format
-- Use specific emojis per type (feat ✨, fix 🐛, etc.)
-- Max 50 characters for the subject line
-- Explain the WHY in the body if needed`;
-  }
-
-  private buildPRPrompt(diff: string, sections: string[]): string {
-    return `Generate a PR description in ${this.language} based on this diff:
-${diff}
-
-Include these sections: ${sections.join(', ')}`;
+    const rawContent = response.choices[0].message.content || '';
+    return Formatter.cleanResponse(rawContent);
   }
 }
