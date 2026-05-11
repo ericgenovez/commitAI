@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { commitAction } from './commands/commit';
+import { prAction } from './commands/pr';
 
 const program = new Command();
 
@@ -17,8 +18,6 @@ program
 program
   .command('pr')
   .description('Generate a PR description from branch differences')
-  .action(() => {
-    console.log(chalk.blue('PR command coming soon!'));
-  });
+  .action(prAction);
 
 program.parse(process.argv);
