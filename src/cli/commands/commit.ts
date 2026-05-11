@@ -1,6 +1,6 @@
 import { gitManager } from '../../core/git';
 import { loadConfig } from '../../config/loader';
-import { OpenAIProvider } from '../../providers/openai';
+import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 
@@ -29,27 +29,13 @@ export async function commitAction() {
 
     spinner.text = `Gerando mensagem com ${config.provider}...`;
     
-    // Por enquanto apenas OpenAI, depois faremos uma factory de providers
-    if (config.provider !== 'openai') {
-        spinner.stop();
-        logger.error(`Provedor ${config.provider} ainda não implementado.`);
-        return;
-    }
-
-    if (!config.apiKey) {
+    if (!config.apiKey && config.provider !== 'ollama') {
         spinner.stop();
         logger.error('API Key não configurada. Verifique seu arquivo .env ou config.json.');
         return;
     }
 
-    const provider = new OpenAIProvider({
-      apiKey: config.apiKey,
-      model: config.model,
-      language: config.language,
-      projectContext: config.projectContext,
-      prSections: config.prTemplate.sections
-    });
-
+    const provider = ProviderFactory.getProvider(config);
     const commitMessage = await provider.generateCommitMessage(truncatedDiff);
 
     spinner.succeed('Mensagem gerada com sucesso!\n');
