@@ -1,0 +1,44 @@
+import Anthropic from '@anthropic-ai/sdk';
+import { AIProvider, ProviderOptions } from './base';
+import { PromptBuilder } from '../core/prompt-builder';
+import { Formatter } from '../core/formatter';
+import { CommitAIConfig } from '../config/schema';
+
+export class AnthropicProvider implements AIProvider {
+  private client: Anthropic;
+  private config: ProviderOptions & { projectContext?: string; prSections: string[] };
+
+  constructor(options: ProviderOptions & { projectContext?: string; prSections: string[] }) {
+    this.client = new Anthropic({ apiKey: options.apiKey });
+    this.config = options;
+  }
+
+  async generateCommitMessage(diff: string): Promise<string> {
+    const prompt = PromptBuilder.buildCommitPrompt(diff, {
+      language: this.config.language,
+      projectContext: this.config.projectContext,
+    } as CommitAIConfig);
+    
+    const response = await this.client.messages.create({
+      model: this.config.model,
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+    return Formatter.cleanResponse(content);
+  }
+
+  async generatePRDescription(diff: string): Promise<string> {
+    const prompt = PromptBuilder.buildPRPrompt(diff, this.config.prSections, this.config.language);
+
+    const response = await this.client.messages.create({
+      model: this.config.model,
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const content = response.content[0].type === 'text' ? response.content[0].text : '';
+    return Formatter.cleanResponse(content);
+  }
+}

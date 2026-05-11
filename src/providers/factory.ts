@@ -1,4 +1,5 @@
 import { OpenAIProvider } from './openai';
+import { AnthropicProvider } from './anthropic';
 import { AIProvider } from './base';
 import { CommitAIConfig } from '../config/schema';
 
@@ -15,7 +16,8 @@ export class ProviderFactory {
     switch (config.provider) {
       case 'openai':
         return new OpenAIProvider(options);
-      // Os próximos cases serão adicionados conforme implementarmos os providers
+      case 'anthropic':
+        return new AnthropicProvider(options);
       default:
         throw new Error(`Provedor '${config.provider}' ainda não suportado ou não implementado.`);
     }
