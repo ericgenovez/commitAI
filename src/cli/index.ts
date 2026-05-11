@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { commitAction } from './commands/commit';
 
 const program = new Command();
 
@@ -11,9 +12,7 @@ program
 program
   .command('commit')
   .description('Generate a commit message from staged changes')
-  .action(() => {
-    console.log(chalk.blue('Commit command coming soon!'));
-  });
+  .action(commitAction);
 
 program
   .command('pr')
