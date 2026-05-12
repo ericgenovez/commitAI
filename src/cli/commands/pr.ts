@@ -6,7 +6,7 @@ import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 import { clipboard } from '../../utils/clipboard';
 import { initAction } from './init';
-import { formatUsage, getEfficiencyNote } from '../../utils/costs';
+import { formatUsage, getModelTier } from '../../utils/costs';
 
 export async function prAction() {
   try {
@@ -94,7 +94,7 @@ export async function prAction() {
           completionTokens: currentUsage.completionTokens,
         });
         console.log(`📊 ${usageText}`);
-        console.log(`💡 ${getEfficiencyNote(config.model)}\n`);
+        console.log(`🏷️  ${getModelTier(config.model)}\n`);
       } else {
         console.log('');
       }

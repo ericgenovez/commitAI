@@ -5,7 +5,7 @@ import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 import { initAction } from './init';
-import { formatUsage, getEfficiencyNote } from '../../utils/costs';
+import { formatUsage, getModelTier } from '../../utils/costs';
 
 export async function commitAction() {
   try {
@@ -74,7 +74,7 @@ export async function commitAction() {
           completionTokens: currentUsage.completionTokens,
         });
         console.log(`📊 ${usageText}`);
-        console.log(`💡 ${getEfficiencyNote(config.model)}\n`);
+        console.log(`🏷️  ${getModelTier(config.model)}\n`);
       } else {
         console.log('');
       }

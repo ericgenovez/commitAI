@@ -35,11 +35,12 @@ export function formatUsage(usage: Usage): string {
 }
 
 /**
- * Returns a friendly message about cost efficiency for the selected model.
+ * Returns information about the model tier.
  */
-export function getEfficiencyNote(model: string): string {
+export function getModelTier(model: string): string {
   if (model.includes('mini') || model.includes('haiku') || model.includes('deepseek')) {
-    return 'Este modelo é extremamente econômico (aprox. 1000 commits por $0.10).';
+    return 'Modelo: Classe Eficiência';
   }
-  return 'Modelo de alta performance.';
+  return 'Modelo: Classe Performance';
 }
+
