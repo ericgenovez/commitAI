@@ -91,6 +91,11 @@ export async function prAction(options: { model?: string } = {}) {
           
           spinner.text = `Gerando descrição com ${chalk.cyan(config.provider)}...`;
           const truncatedDiff = truncateDiff(diff, config.maxDiffLines);
+          
+          if (diff.split('\n').length > config.maxDiffLines) {
+            logger.warn(`O diff é muito grande (${diff.split('\n').length} linhas) e foi truncado para ${config.maxDiffLines} linhas.`);
+          }
+
           const provider = ProviderFactory.getProvider(config);
           const response = await provider.generatePRDescription(truncatedDiff, config.prTemplate.sections);
           

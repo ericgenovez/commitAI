@@ -4,9 +4,10 @@ import { loadConfig } from '../../config/loader';
 import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
+import { clipboard } from '../../utils/clipboard';
 import { initAction } from './init';
 import { formatUsage, getModelTier } from '../../utils/costs';
-
+import chalk from 'chalk';
 import boxen from 'boxen';
 
 export async function commitAction(options: { model?: string } = {}) {
@@ -42,10 +43,47 @@ export async function commitAction(options: { model?: string } = {}) {
       return;
     }
 
-    const diff = await gitManager.getStagedDiff();
+    let diff = await gitManager.getStagedDiff();
     if (!diff) {
       logger.warn('Nenhuma alteração encontrada no stage. Use "git add" primeiro.');
       return;
+    }
+
+    // Lógica de "Mentor de Commits" para diffs grandes
+    if (diff.split('\n').length > config.maxDiffLines) {
+      logger.warn(`O diff total é muito grande (${diff.split('\n').length} linhas).`);
+      
+      const { shouldFilter } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'shouldFilter',
+          message: 'Deseja selecionar arquivos específicos para este commit (recomendado para clareza e economia)?',
+          default: true,
+        },
+      ]);
+
+      if (shouldFilter) {
+        const stagedFiles = await gitManager.getStagedFiles();
+        const { selectedFiles } = await inquirer.prompt([
+          {
+            type: 'checkbox',
+            name: 'selectedFiles',
+            message: 'Selecione os arquivos que farão parte deste commit:',
+            choices: stagedFiles,
+            validate: (input) => input.length > 0 || 'Selecione ao menos um arquivo.',
+          },
+        ]);
+
+        const filesToUnstage = stagedFiles.filter(f => !selectedFiles.includes(f));
+        if (filesToUnstage.length > 0) {
+          const spinner = logger.spinner('Organizando stage...');
+          await gitManager.unstageFiles(filesToUnstage);
+          diff = await gitManager.getStagedDiff();
+          spinner.succeed(`Stage atualizado! ${selectedFiles.length} arquivos mantidos, ${filesToUnstage.length} removidos para o próximo commit.`);
+        }
+      } else {
+        logger.info(chalk.dim(`Prosseguindo com o diff truncado em ${config.maxDiffLines} linhas.`));
+      }
     }
 
     const truncatedDiff = truncateDiff(diff, config.maxDiffLines);
@@ -77,6 +115,7 @@ export async function commitAction(options: { model?: string } = {}) {
           margin: { top: 1, bottom: 0 },
           borderStyle: 'round',
           borderColor: 'cyan',
+          width: 80,
           title: chalk.bold.cyan(' 💬 Mensagem Sugerida '),
           titleAlignment: 'center',
         }));
