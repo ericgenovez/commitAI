@@ -7,11 +7,12 @@ import { logger } from '../../utils/logger';
 import { initAction } from './init';
 import { formatUsage, getModelTier } from '../../utils/costs';
 
+import boxen from 'boxen';
+
 export async function commitAction(options: { model?: string } = {}) {
   try {
     let config = loadConfig();
 
-    // Sobrescreve o modelo se passado via CLI
     if (options.model) {
       config.model = options.model;
     }
@@ -29,7 +30,7 @@ export async function commitAction(options: { model?: string } = {}) {
 
       if (runInit) {
         await initAction();
-        config = loadConfig(); // Reload config after init
+        config = loadConfig();
       } else {
         logger.error('Para usar o CommitAI, você precisa definir uma API Key.');
         return;
@@ -52,16 +53,17 @@ export async function commitAction(options: { model?: string } = {}) {
 
     let currentMessage = '';
     let currentUsage: any = null;
-    let confirmed = false;
+    let step: 'generate' | 'review' | 'edit' | 'done' = 'generate';
 
-    while (!confirmed) {
-      if (!currentMessage) {
-        const spinner = logger.spinner(`Gerando mensagem com ${config.provider}...`);
+    while (step !== 'done') {
+      if (step === 'generate') {
+        const spinner = logger.spinner(`Gerando sugestão com ${chalk.cyan(config.provider)}...`);
         try {
           const response = await provider.generateCommitMessage(truncatedDiff);
           currentMessage = response.content;
           currentUsage = response.usage;
-          spinner.succeed('Mensagem gerada!\n');
+          spinner.succeed('Sugestão pronta!');
+          step = 'review';
         } catch (error: any) {
           spinner.fail('Erro ao gerar mensagem.');
           logger.error(error.message);
@@ -69,56 +71,77 @@ export async function commitAction(options: { model?: string } = {}) {
         }
       }
 
-      console.log(Buffer.alloc(40, '-').toString());
-      console.log(currentMessage);
-      console.log(Buffer.alloc(40, '-').toString());
+      if (step === 'review') {
+        console.log('\n' + boxen(chalk.white(currentMessage), {
+          padding: 1,
+          margin: { top: 1, bottom: 0 },
+          borderStyle: 'round',
+          borderColor: 'cyan',
+          title: chalk.bold.cyan(' 💬 Mensagem Sugerida '),
+          titleAlignment: 'center',
+        }));
 
-      if (currentUsage) {
-        const usageText = formatUsage({
-          promptTokens: currentUsage.promptTokens,
-          completionTokens: currentUsage.completionTokens,
-        });
-        console.log(`📊 ${usageText}`);
-        console.log(`🏷️  ${getModelTier(config.model)}\n`);
-      } else {
-        console.log('');
+        if (currentUsage) {
+          const usageText = formatUsage({
+            promptTokens: currentUsage.promptTokens,
+            completionTokens: currentUsage.completionTokens,
+          });
+          console.log(chalk.dim(`  📊 ${usageText} | 🏷️  ${getModelTier(config.model)}\n`));
+        }
+
+        const { action } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'action',
+            message: 'O que deseja fazer?',
+            choices: [
+              { name: '🚀 Confirmar e Commitar', value: 'commit' },
+              { name: '📋 Copiar para o clipboard', value: 'copy' },
+              { name: '✍️  Editar manualmente', value: 'edit' },
+              { name: '🔄 Gerar novamente', value: 'generate' },
+              { name: '❌ Cancelar', value: 'cancel' },
+            ],
+          },
+        ]);
+
+        switch (action) {
+          case 'commit':
+            await gitManager.commit(currentMessage);
+            logger.success('Commit realizado com sucesso!');
+            step = 'done';
+            break;
+          case 'copy':
+            await clipboard.copy(currentMessage);
+            logger.success('Copiado para o clipboard!');
+            break;
+          case 'edit':
+            step = 'edit';
+            break;
+          case 'generate':
+            currentMessage = '';
+            step = 'generate';
+            break;
+          case 'cancel':
+            logger.info('Operação cancelada.');
+            step = 'done';
+            break;
+        }
       }
 
-      const { action } = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'action',
-          message: 'O que deseja fazer?',
-          choices: [
-            { name: '✅ Aceitar e commitar', value: 'commit' },
-            { name: '✍️  Escrever manualmente', value: 'edit' },
-            { name: '🔄 Regenerar', value: 'regenerate' },
-            { name: '❌ Cancelar', value: 'cancel' },
-          ],
-        },
-      ]);
-
-      if (action === 'commit') {
-        await gitManager.commit(currentMessage);
-        logger.success('Commit realizado com sucesso!');
-        confirmed = true;
-      } else if (action === 'edit') {
+      if (step === 'edit') {
         const { editedMessage } = await inquirer.prompt([
           {
             type: 'input',
             name: 'editedMessage',
-            message: 'Digite a nova mensagem de commit:',
+            message: 'Edite a mensagem (ou deixe vazio para voltar):',
+            default: currentMessage,
           },
         ]);
         
         if (editedMessage.trim()) {
           currentMessage = editedMessage;
         }
-      } else if (action === 'regenerate') {
-        currentMessage = ''; // Limpa para forçar uma nova geração no próximo loop
-      } else if (action === 'cancel') {
-        logger.info('Operação cancelada.');
-        confirmed = true;
+        step = 'review';
       }
     }
   } catch (error: any) {

@@ -8,7 +8,8 @@ export async function openInBrowser(url: string): Promise<void> {
   let command = '';
 
   if (platform === 'win32') {
-    command = `start "" "${url}"`;
+    // No Windows, o primeiro parâmetro vazio "" é o título da janela, o segundo é a URL
+    command = `start "" "${url.replace(/&/g, '^&')}"`;
   } else if (platform === 'darwin') {
     command = `open "${url}"`;
   } else {
