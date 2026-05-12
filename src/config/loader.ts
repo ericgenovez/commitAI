@@ -1,44 +1,58 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import dotenv from 'dotenv';
 import { ConfigSchema, CommitAIConfig } from './schema';
 
 dotenv.config();
 
-/*
-  Lê o arquivo de configuração local do projeto e faz o merge com variáveis de ambiente.
-  Retorna a configuração validada via Zod.
-*/
-
+/**
+ * Loads the configuration by merging:
+ * 1. Default values (via Zod)
+ * 2. Global config (~/.commitai/config.json)
+ * 3. Local project config (.commitai/config.json)
+ * 4. Environment variables (COMMITAI_API_KEY)
+ */
 export function loadConfig(): CommitAIConfig {
-  const configPath = path.resolve(process.cwd(), '.commitai', 'config.json');
-  let rawConfig: Partial<CommitAIConfig> = {};
+  const globalConfigPath = path.join(os.homedir(), '.commitai', 'config.json');
+  const localConfigPath = path.resolve(process.cwd(), '.commitai', 'config.json');
 
-  if (fs.existsSync(configPath)) {
+  let config: Partial<CommitAIConfig> = {};
+
+  // 1. Try to load Global Config
+  if (fs.existsSync(globalConfigPath)) {
     try {
-      const fileContent = fs.readFileSync(configPath, 'utf-8');
-      rawConfig = JSON.parse(fileContent);
+      const globalContent = fs.readFileSync(globalConfigPath, 'utf-8');
+      config = { ...config, ...JSON.parse(globalContent) };
     } catch (error) {
-      console.warn(
-        `[CommitAI] Warning: Could not parse ${configPath}. Using defaults.`,
-      );
+      console.warn(`[CommitAI] Warning: Could not parse global config at ${globalConfigPath}`);
     }
   }
 
-  const apiKey = process.env.COMMITAI_API_KEY || rawConfig.apiKey;
+  // 2. Try to load Local Config (overrides global)
+  if (fs.existsSync(localConfigPath)) {
+    try {
+      const localContent = fs.readFileSync(localConfigPath, 'utf-8');
+      config = { ...config, ...JSON.parse(localContent) };
+    } catch (error) {
+      console.warn(`[CommitAI] Warning: Could not parse local config at ${localConfigPath}`);
+    }
+  }
+
+  const apiKey = process.env.COMMITAI_API_KEY || config.apiKey;
 
   if (!apiKey && !process.env.VITEST) {
     console.error('\n[CommitAI] ❌ Erro: API Key não encontrada.');
-    console.error('Para usar o CommitAI, você precisa definir a variável COMMITAI_API_KEY no seu arquivo .env ou no ambiente do sistema.\n');
+    console.error('Para usar o CommitAI, você precisa definir a variável COMMITAI_API_KEY no seu arquivo .env, no ambiente do sistema, ou em ~/.commitai/config.json\n');
     process.exit(1);
   }
 
   const mergedConfig = {
-    ...rawConfig,
+    ...config,
     apiKey,
   };
 
-  // Valida e aplica defaults usando Zod
+  // Validate and apply defaults using Zod
   const result = ConfigSchema.safeParse(mergedConfig);
 
   if (!result.success) {
