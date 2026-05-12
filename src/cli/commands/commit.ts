@@ -7,9 +7,14 @@ import { logger } from '../../utils/logger';
 import { initAction } from './init';
 import { formatUsage, getModelTier } from '../../utils/costs';
 
-export async function commitAction() {
+export async function commitAction(options: { model?: string } = {}) {
   try {
     let config = loadConfig();
+
+    // Sobrescreve o modelo se passado via CLI
+    if (options.model) {
+      config.model = options.model;
+    }
 
     if (!config.apiKey && !process.env.VITEST) {
       logger.warn('API Key não encontrada.');

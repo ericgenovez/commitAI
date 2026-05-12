@@ -1,0 +1,15 @@
+node_modules
+src
+tests
+.github
+.vscode
+.commitai
+*.log
+.env
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+README.md
+LICENSE
+error.md
+INSTRUCTIONS.MD

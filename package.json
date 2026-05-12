@@ -1,16 +1,33 @@
 {
-  "name": "commitai",
-  "version": "0.1.0",
-  "description": "CLI tool to generate commit messages and PR descriptions using AI",
+  "name": "@ericgenovez/commitai",
+  "version": "1.0.0",
+  "description": "Professional CLI tool to generate conventional commits and PR descriptions using AI",
+  "author": "Eric Genovez",
+  "license": "MIT",
+  "homepage": "https://github.com/ericgenovez/commitAI#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ericgenovez/commitAI.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "main": "dist/index.js",
   "bin": {
     "commitai": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "dev": "tsx src/cli/index.ts",
-    "build": "tsup src/cli/index.ts --format cjs --clean",
-    "prepare": "npm run build",
-    "start": "node dist/index.js",
+    "build": "tsup src/cli/index.ts --format cjs --minify --clean --dts-resolve",
+    "prepublishOnly": "npm run build",
     "test": "vitest run"
   },
   "dependencies": {

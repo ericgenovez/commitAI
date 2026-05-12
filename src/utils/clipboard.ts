@@ -10,31 +10,37 @@ export const clipboard = {
   async copy(text: string): Promise<void> {
     const platform = process.platform;
     
-    try {
+    return new Promise((resolve, reject) => {
+      let command = '';
       if (platform === 'win32') {
-        // No Windows, usamos o comando 'clip'
-        // Usamos echo com pipe para o clip, escapando caracteres especiais se necessário
-        const command = `echo ${text.replace(/[&|<>=^]/g, '^$&')} | clip`;
-        await execAsync(command);
+        command = 'clip';
       } else if (platform === 'darwin') {
-        // No macOS, usamos 'pbcopy'
-        const proc = exec('pbcopy');
-        proc.stdin?.write(text);
-        proc.stdin?.end();
+        command = 'pbcopy';
       } else {
-        // No Linux, tentamos xclip ou xsel
-        try {
-          const proc = exec('xclip -selection clipboard');
-          proc.stdin?.write(text);
-          proc.stdin?.end();
-        } catch {
-          const proc = exec('xsel --clipboard --input');
-          proc.stdin?.write(text);
-          proc.stdin?.end();
-        }
+        // Linux: tenta xclip, se falhar não faz nada (ou lança erro)
+        command = 'xclip -selection clipboard';
       }
-    } catch (error) {
-      throw new Error('Não foi possível copiar para o clipboard automaticamente.');
-    }
+
+      const child = exec(command, (error) => {
+        if (error) {
+          // Fallback para Linux com xsel
+          if (platform === 'linux') {
+            const fallbackChild = exec('xsel --clipboard --input', (fallbackError) => {
+              if (fallbackError) reject(new Error('Falha ao copiar para o clipboard.'));
+              else resolve();
+            });
+            fallbackChild.stdin?.write(text);
+            fallbackChild.stdin?.end();
+          } else {
+            reject(new Error('Falha ao copiar para o clipboard.'));
+          }
+        } else {
+          resolve();
+        }
+      });
+
+      child.stdin?.write(text);
+      child.stdin?.end();
+    });
   }
 };

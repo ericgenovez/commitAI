@@ -14,17 +14,19 @@ program
 
 program
   .command('init')
-  .description('Initialize or update CommitAI configuration')
+  .description('Inicializa ou atualiza a configuração do CommitAI')
   .action(initAction);
 
 program
   .command('commit')
-  .description('Generate a commit message from staged changes')
+  .description('Gera uma mensagem de commit baseada nas alterações no stage')
+  .option('-m, --model <model>', 'Sobrescreve o modelo de IA definido na configuração')
   .action(commitAction);
 
 program
   .command('pr')
-  .description('Generate a PR description from branch differences')
+  .description('Gera uma descrição de Pull Request comparando branches')
+  .option('-m, --model <model>', 'Sobrescreve o modelo de IA definido na configuração')
   .action(prAction);
 
 program.parse(process.argv);

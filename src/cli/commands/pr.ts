@@ -8,9 +8,16 @@ import { clipboard } from '../../utils/clipboard';
 import { initAction } from './init';
 import { formatUsage, getModelTier } from '../../utils/costs';
 
-export async function prAction() {
+import { openInBrowser } from '../../utils/open';
+
+export async function prAction(options: { model?: string } = {}) {
   try {
     let config = loadConfig();
+
+    // Sobrescreve o modelo se passado via CLI
+    if (options.model) {
+      config.model = options.model;
+    }
 
     if (!config.apiKey && !process.env.VITEST) {
       logger.warn('API Key não encontrada.');
@@ -106,6 +113,7 @@ export async function prAction() {
           message: 'O que deseja fazer?',
           choices: [
             { name: '✅ Copiar para o clipboard', value: 'copy' },
+            { name: '🌐 Abrir no navegador para criar PR', value: 'browser' },
             { name: '✍️  Reescrever manualmente', value: 'edit' },
             { name: '🔄 Regenerar', value: 'regenerate' },
             { name: '❌ Cancelar', value: 'cancel' },
@@ -120,6 +128,40 @@ export async function prAction() {
           confirmed = true;
         } catch (error: any) {
           logger.error('Falha ao copiar: ' + error.message);
+        }
+      } else if (action === 'browser') {
+        try {
+          const remoteUrl = await gitManager.getRemoteUrl();
+          if (!remoteUrl) {
+            logger.error('Não foi possível encontrar a URL do remote origin.');
+            continue;
+          }
+
+          const currentBranch = await gitManager.getCurrentBranch();
+          let prUrl = '';
+
+          // Normalize URL
+          const cleanUrl = remoteUrl
+            .replace('git@', 'https://')
+            .replace(':', '/')
+            .replace(/\.git$/, '');
+
+          if (cleanUrl.includes('github.com')) {
+            prUrl = `${cleanUrl}/compare/${targetBranch}...${currentBranch}?expand=1`;
+          } else if (cleanUrl.includes('gitlab.com')) {
+            prUrl = `${cleanUrl}/-/merge_requests/new?merge_request[source_branch]=${currentBranch}&merge_request[target_branch]=${targetBranch}`;
+          } else {
+            logger.warn('Provedor git não reconhecido para abertura automática.');
+            continue;
+          }
+
+          await clipboard.copy(currentPRDescription);
+          logger.info('Descrição copiada para o clipboard para facilitar o preenchimento.');
+          await openInBrowser(prUrl);
+          logger.success('Navegador aberto!');
+          confirmed = true;
+        } catch (error: any) {
+          logger.error('Erro ao abrir navegador: ' + error.message);
         }
       } else if (action === 'edit') {
         const { editedPR } = await inquirer.prompt([
