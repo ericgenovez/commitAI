@@ -114,7 +114,7 @@ export async function prAction(options: { model?: string } = {}) {
       if (step === 'review') {
         console.log('\n' + boxen(chalk.white(currentPRDescription), {
           padding: 1,
-          margin: { top: 1, bottom: 0 },
+          margin: { top: 1, bottom: 0, left: 0, right: 0 },
           borderStyle: 'round',
           borderColor: 'magenta',
           title: chalk.bold.magenta(' 📝 Descrição do PR '),
