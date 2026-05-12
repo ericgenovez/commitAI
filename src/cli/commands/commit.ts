@@ -115,7 +115,6 @@ export async function commitAction(options: { model?: string } = {}) {
           margin: { top: 1, bottom: 0, left: 0, right: 0 },
           borderStyle: 'round',
           borderColor: 'cyan',
-          width: 80,
           title: chalk.bold.cyan(' 💬 Mensagem Sugerida '),
           titleAlignment: 'center',
         }));
