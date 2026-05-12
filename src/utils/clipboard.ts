@@ -13,7 +13,15 @@ export const clipboard = {
     return new Promise((resolve, reject) => {
       let command = '';
       if (platform === 'win32') {
-        command = 'clip';
+        // Usa PowerShell via stdin para evitar erros de escape de caracteres especiais e encoding
+        const child = exec('powershell -NoProfile -EncodedCommand U2V0LUNsaXBib2FyZCAtVmFsdWUgJGlucHV0', (error) => {
+          if (error) reject(new Error('Falha ao copiar para o clipboard.'));
+          else resolve();
+        });
+        
+        child.stdin?.write(text, 'utf8');
+        child.stdin?.end();
+        return;
       } else if (platform === 'darwin') {
         command = 'pbcopy';
       } else {

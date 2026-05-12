@@ -52,6 +52,23 @@ Este comando irá gerar a descrição, copiá-la para o seu clipboard e oferecer
 
 ## ⚙️ Customização
 
+Você pode personalizar o comportamento do CommitAI editando o arquivo `~/.commitai/config.json`.
+
+### Controle de Custos e Performance
+Por padrão, o CommitAI limita o tamanho do diff enviado para a IA para evitar custos inesperados.
+
+- **`maxDiffLines`**: Define o máximo de linhas de código que a IA irá ler (Padrão: `600`).
+- **Filtros Automáticos**: Arquivos como `package-lock.json`, imagens e binários são ignorados automaticamente para economizar tokens.
+
+Para aumentar o limite (ex: para 1000 linhas), altere seu arquivo de configuração:
+```json
+{
+  "maxDiffLines": 1000
+}
+```
+
+> 💡 **Dica Profissional:** Para melhores resultados e economia, tente fazer commits menores e mais frequentes. Isso ajuda a IA a ser muito mais precisa na descrição das alterações.
+
 O CommitAI busca configurações na seguinte ordem:
 1. Variáveis de ambiente (`COMMITAI_API_KEY`)
 2. Flag `--model` via linha de comando

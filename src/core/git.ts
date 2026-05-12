@@ -70,6 +70,31 @@ export class GitManager {
   }
 
   /**
+   * Retorna uma lista de arquivos que estão atualmente no stage.
+   */
+  async getStagedFiles(): Promise<string[]> {
+    try {
+      const status = await this.git.status();
+      return status.staged;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Remove arquivos específicos do stage (git restore --staged).
+   */
+  async unstageFiles(files: string[]): Promise<void> {
+    try {
+      if (files.length > 0) {
+        await this.git.raw(['restore', '--staged', ...files]);
+      }
+    } catch (error) {
+      throw new Error('Falha ao remover arquivos do stage.');
+    }
+  }
+
+  /**
    * Realiza o commit das alterações no stage com a mensagem fornecida.
    */
   async commit(message: string): Promise<void> {

@@ -1,9 +1,10 @@
 {
   "name": "@ericgenovez/commitai",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Professional CLI tool to generate conventional commits and PR descriptions using AI",
   "author": "Eric Genovez",
   "license": "MIT",
+  "preferGlobal": true,
   "homepage": "https://github.com/ericgenovez/commitAI#readme",
   "repository": {
     "type": "git",

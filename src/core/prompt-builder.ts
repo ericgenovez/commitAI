@@ -25,16 +25,18 @@ export class PromptBuilder {
       .map(([type, emoji]) => `${type}: ${emoji}`)
       .join('\n');
 
-    return `You are an expert developer. Generate a professional conventional commit message in ${config.language} based on the git diff provided below.
+    return `You are an expert developer specializing in Conventional Commits. 
+Generate a professional commit message in ${config.language} based on the git diff provided.
 
-RULES:
-1. Format: <type> <emoji>(<scope>): <subject>
-2. Use EXACTLY these emojis for each type:
+STRICT RULES:
+1. HEADER: Must be exactly ONE line. Format: <type> <emoji>(<scope>): <subject>
+2. SUBJECT: Max 60 characters. Concise summary of the MOST IMPORTANT change.
+3. EMOJIS: Use these EXACTLY (type: emoji):
 ${emojiRules}
-3. The emoji MUST be placed between the type and the opening parenthesis of the scope.
-4. Subject must be concise (max 50 chars).
-5. Provide a body explaining WHY if the change is complex.
-6. NO markdown code blocks. NO conversational text.
+4. BODY: If there are multiple changes or complexity, use the body to list them as bullet points starting with "- ". Explain WHY, not just WHAT.
+5. NEVER provide multiple headers. Only ONE <type> <emoji>(<scope>): <subject> line at the very top.
+6. LANGUAGE: All content must be in ${config.language}.
+7. NO markdown, NO code blocks, NO chatter.
 
 ${config.projectContext ? `PROJECT CONTEXT:\n${config.projectContext}\n` : ''}
 GIT DIFF:
