@@ -30,10 +30,12 @@ Generate a professional commit message in ${config.language} based on the git di
 
 STRICT RULES:
 1. HEADER: Must be exactly ONE line. Format: <type> <emoji>(<scope>): <subject>
-2. SUBJECT: Max 60 characters. Concise summary of the MOST IMPORTANT change.
+2. SUBJECT: Max 60 characters. Provide a clear, technical summary of the primary change.
 3. EMOJIS: Use these EXACTLY (type: emoji):
 ${emojiRules}
-4. BODY: If there are multiple changes or complexity, use the body to list them as bullet points starting with "- ". Explain WHY, not just WHAT.
+4. BODY: Provide a bulleted list (using "- ") of all significant technical changes included in the diff. 
+   - Be descriptive: "Adds validation for email" is better than "Updates validation".
+   - Be factual: Only describe what is actually in the diff. Do not invent business reasons or "why" unless it is obvious from the code changes.
 5. NEVER provide multiple headers. Only ONE <type> <emoji>(<scope>): <subject> line at the very top.
 6. LANGUAGE: All content must be in ${config.language}.
 7. NO markdown, NO code blocks, NO chatter.
