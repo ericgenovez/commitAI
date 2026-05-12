@@ -234,13 +234,15 @@ export async function prAction(options: { model?: string } = {}) {
       if (step === 'edit') {
         const { editedPR } = await inquirer.prompt([
           {
-            type: 'input',
+            type: 'editor',
             name: 'editedPR',
-            message: 'Edite a descrição (ou deixe vazio para voltar):',
+            message: 'Edite a descrição do PR no seu editor:',
             default: currentPRDescription,
           },
         ]);
-        if (editedPR.trim()) currentPRDescription = editedPR;
+        if (editedPR && editedPR.trim()) {
+          currentPRDescription = editedPR;
+        }
         step = 'review';
       }
     }
