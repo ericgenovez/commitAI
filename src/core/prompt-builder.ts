@@ -46,10 +46,14 @@ ${diff}`;
   }
 
   static buildPRPrompt(diff: string, sections: string[], language: string): string {
-    return `Generate a Pull Request description in ${language} for the following diff:
+    return `You are an expert developer. Generate a professional Pull Request description in ${language} for the following diff:
 ${diff}
 
-Include these sections: ${sections.join(', ')}.
-Use professional and clear language.`;
+STRICT RULES:
+1. START with a line: "TITLE: <concise and meaningful title>"
+2. Follow with the sections: ${sections.join(', ')}.
+3. DO NOT use generic titles like "Descrição do PR" or "Pull Request". Be specific about what changed in the title.
+4. Use Markdown for formatting the body.
+5. Use professional and clear language.`;
   }
 }

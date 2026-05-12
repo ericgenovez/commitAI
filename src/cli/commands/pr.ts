@@ -71,6 +71,7 @@ export async function prAction(options: { model?: string } = {}) {
             name: 'branch',
             message: 'Qual a branch de destino (target branch)?',
             default: targetBranch,
+            validate: (input) => input.trim().length > 0 || 'O nome da branch não pode ser vazio.',
           },
         ]);
         targetBranch = branch;
@@ -188,18 +189,21 @@ export async function prAction(options: { model?: string } = {}) {
               }
               cleanUrl = cleanUrl.replace(/\.git$/, '');
 
-              // Tenta extrair a primeira linha como título ou usa um padrão
-              const titleMatch = currentPRDescription.match(/^# (.*)|^## (.*)|^(.*)/);
-              const prTitle = titleMatch ? (titleMatch[1] || titleMatch[2] || titleMatch[3] || 'Pull Request').trim() : 'Pull Request';
+              // Extrai o título baseado na nova regra "TITLE: ..." do prompt
+              const titleMatch = currentPRDescription.match(/TITLE: (.*)/i);
+              const prTitle = titleMatch ? titleMatch[1].trim() : 'Pull Request';
+              
+              // Remove a linha do título da descrição final para não ficar duplicado no body
+              const cleanDescription = currentPRDescription.replace(/TITLE: .*\n?/i, '').trim();
               
               let prUrl = '';
               if (cleanUrl.includes('github.com')) {
                 const encodedTitle = encodeURIComponent(prTitle);
-                const encodedBody = encodeURIComponent(currentPRDescription);
+                const encodedBody = encodeURIComponent(cleanDescription);
                 prUrl = `${cleanUrl}/compare/${targetBranch}...${currentBranch}?expand=1&title=${encodedTitle}&body=${encodedBody}`;
               } else if (cleanUrl.includes('gitlab.com')) {
                 const encodedTitle = encodeURIComponent(prTitle);
-                const encodedBody = encodeURIComponent(currentPRDescription);
+                const encodedBody = encodeURIComponent(cleanDescription);
                 prUrl = `${cleanUrl}/-/merge_requests/new?merge_request[source_branch]=${currentBranch}&merge_request[target_branch]=${targetBranch}&merge_request[title]=${encodedTitle}&merge_request[description]=${encodedBody}`;
               }
               if (prUrl) {
