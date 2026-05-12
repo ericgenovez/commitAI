@@ -147,6 +147,30 @@ export async function prAction(options: { model?: string } = {}) {
           },
         ]);
 
+        // Se for abrir navegador ou GH CLI, verifica se precisa de push
+        if (action === 'browser' || action === 'gh') {
+          const { confirmPush } = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'confirmPush',
+              message: 'Deseja realizar o push da branch para o origin antes de prosseguir?',
+              default: true,
+            },
+          ]);
+
+          if (confirmPush) {
+            const pushSpinner = logger.spinner('Realizando push para origin...');
+            try {
+              await gitManager.push();
+              pushSpinner.succeed('Push realizado com sucesso!');
+            } catch (error: any) {
+              pushSpinner.fail('Erro ao realizar push.');
+              logger.error(error.message);
+              continue; // Volta para o menu de review
+            }
+          }
+        }
+
         switch (action) {
           case 'copy':
             await clipboard.copy(currentPRDescription);
@@ -156,7 +180,14 @@ export async function prAction(options: { model?: string } = {}) {
             const remoteUrl = await gitManager.getRemoteUrl();
             if (remoteUrl) {
               const currentBranch = await gitManager.getCurrentBranch();
-              const cleanUrl = remoteUrl.replace('git@', 'https://').replace(':', '/').replace(/\.git$/, '');
+              
+              // Normalize URL: converte git@github.com:user/repo.git para https://github.com/user/repo
+              let cleanUrl = remoteUrl;
+              if (cleanUrl.startsWith('git@')) {
+                cleanUrl = 'https://' + cleanUrl.substring(4).replace(':', '/');
+              }
+              cleanUrl = cleanUrl.replace(/\.git$/, '');
+
               let prUrl = '';
               if (cleanUrl.includes('github.com')) {
                 prUrl = `${cleanUrl}/compare/${targetBranch}...${currentBranch}?expand=1`;
