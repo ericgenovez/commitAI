@@ -30,10 +30,12 @@ Generate a professional commit message in ${config.language} based on the git di
 
 STRICT RULES:
 1. HEADER: Must be exactly ONE line. Format: <type> <emoji>(<scope>): <subject>
-2. SUBJECT: Max 60 characters. Concise summary of the MOST IMPORTANT change.
+2. SUBJECT: Max 60 characters. Provide a clear, technical summary of the primary change.
 3. EMOJIS: Use these EXACTLY (type: emoji):
 ${emojiRules}
-4. BODY: If there are multiple changes or complexity, use the body to list them as bullet points starting with "- ". Explain WHY, not just WHAT.
+4. BODY: Provide a bulleted list (using "- ") of all significant technical changes included in the diff. 
+   - Be descriptive: "Adds validation for email" is better than "Updates validation".
+   - Be factual: Only describe what is actually in the diff. Do not invent business reasons or "why" unless it is obvious from the code changes.
 5. NEVER provide multiple headers. Only ONE <type> <emoji>(<scope>): <subject> line at the very top.
 6. LANGUAGE: All content must be in ${config.language}.
 7. NO markdown, NO code blocks, NO chatter.
@@ -44,10 +46,14 @@ ${diff}`;
   }
 
   static buildPRPrompt(diff: string, sections: string[], language: string): string {
-    return `Generate a Pull Request description in ${language} for the following diff:
+    return `You are an expert developer. Generate a professional Pull Request description in ${language} for the following diff:
 ${diff}
 
-Include these sections: ${sections.join(', ')}.
-Use professional and clear language.`;
+STRICT RULES:
+1. START with a line: "TITLE: <concise and meaningful title>"
+2. Follow with the sections: ${sections.join(', ')}.
+3. DO NOT use generic titles like "Descrição do PR" or "Pull Request". Be specific about what changed in the title.
+4. Use Markdown for formatting the body.
+5. Use professional and clear language.`;
   }
 }

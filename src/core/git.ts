@@ -106,6 +106,18 @@ export class GitManager {
   }
 
   /**
+   * Realiza o push da branch atual para o remote origin.
+   */
+  async push(): Promise<void> {
+    try {
+      const branch = await this.getCurrentBranch();
+      await this.git.push('origin', branch, ['-u']);
+    } catch (error) {
+      throw new Error('Falha ao realizar o push para o remote origin. Verifique sua conexão e permissões.');
+    }
+  }
+
+  /**
    * Retorna o nome da branch atual.
    */
   async getCurrentBranch(): Promise<string> {

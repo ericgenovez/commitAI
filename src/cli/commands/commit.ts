@@ -170,14 +170,14 @@ export async function commitAction(options: { model?: string } = {}) {
       if (step === 'edit') {
         const { editedMessage } = await inquirer.prompt([
           {
-            type: 'input',
+            type: 'editor',
             name: 'editedMessage',
-            message: 'Edite a mensagem (ou deixe vazio para voltar):',
+            message: 'Edite a mensagem de commit no seu editor:',
             default: currentMessage,
           },
         ]);
         
-        if (editedMessage.trim()) {
+        if (editedMessage && editedMessage.trim()) {
           currentMessage = editedMessage;
         }
         step = 'review';
