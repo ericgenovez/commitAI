@@ -112,7 +112,7 @@ export async function commitAction(options: { model?: string } = {}) {
       if (step === 'review') {
         console.log('\n' + boxen(chalk.white(currentMessage), {
           padding: 1,
-          margin: { top: 1, bottom: 0 },
+          margin: { top: 1, bottom: 0, left: 0, right: 0 },
           borderStyle: 'round',
           borderColor: 'cyan',
           width: 80,
