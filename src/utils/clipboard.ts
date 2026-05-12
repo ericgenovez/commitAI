@@ -10,44 +10,56 @@ export const clipboard = {
   async copy(text: string): Promise<void> {
     const platform = process.platform;
     
-    return new Promise((resolve, reject) => {
-      let command = '';
+    // Sanitização para Windows para evitar erros de encoding no comando 'clip'
+    const sanitizeForWindows = (str: string) => {
+      return str
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // Remove emojis
+        .replace(/[^\x00-\x7F]/g, ''); // Remove qualquer outro caractere não-ASCII
+    };
+
+    return new Promise((resolve) => {
+      let textToCopy = text;
+
       if (platform === 'win32') {
-        // Usa PowerShell via stdin para evitar erros de escape de caracteres especiais e encoding
-        const child = exec('powershell -NoProfile -EncodedCommand U2V0LUNsaXBib2FyZCAtVmFsdWUgJGlucHV0', (error) => {
-          if (error) reject(new Error('Falha ao copiar para o clipboard.'));
-          else resolve();
-        });
+        textToCopy = sanitizeForWindows(text);
         
-        child.stdin?.write(text, 'utf8');
-        child.stdin?.end();
+        const proc = exec('clip');
+        proc.on('close', () => resolve());
+        proc.on('error', () => {
+          console.warn('\n⚠️  Não foi possível copiar automaticamente.');
+          resolve();
+        });
+        proc.stdin?.write(textToCopy);
+        proc.stdin?.end();
         return;
-      } else if (platform === 'darwin') {
+      }
+
+      let command = '';
+      if (platform === 'darwin') {
         command = 'pbcopy';
       } else {
-        // Linux: tenta xclip, se falhar não faz nada (ou lança erro)
         command = 'xclip -selection clipboard';
       }
 
       const child = exec(command, (error) => {
         if (error) {
-          // Fallback para Linux com xsel
           if (platform === 'linux') {
             const fallbackChild = exec('xsel --clipboard --input', (fallbackError) => {
-              if (fallbackError) reject(new Error('Falha ao copiar para o clipboard.'));
+              if (fallbackError) resolve();
               else resolve();
             });
             fallbackChild.stdin?.write(text);
             fallbackChild.stdin?.end();
           } else {
-            reject(new Error('Falha ao copiar para o clipboard.'));
+            resolve();
           }
         } else {
           resolve();
         }
       });
 
-      child.stdin?.write(text);
+      child.stdin?.write(textToCopy);
       child.stdin?.end();
     });
   }
