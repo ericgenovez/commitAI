@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { AIProvider, ProviderOptions } from './base';
+import { AIProvider, AIResponse, ProviderOptions } from './base';
 import { PromptBuilder } from '../core/prompt-builder';
 import { Formatter } from '../core/formatter';
 import { CommitAIConfig } from '../config/schema';
@@ -16,7 +16,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     this.config = options;
   }
 
-  async generateCommitMessage(diff: string): Promise<string> {
+  async generateCommitMessage(diff: string): Promise<AIResponse> {
     const prompt = PromptBuilder.buildCommitPrompt(diff, {
       language: this.config.language,
       projectContext: this.config.projectContext,
@@ -29,10 +29,18 @@ export class OpenAICompatibleProvider implements AIProvider {
     });
 
     const rawContent = response.choices[0].message.content || '';
-    return Formatter.cleanResponse(rawContent);
+    const usage = response.usage;
+
+    return {
+      content: Formatter.cleanResponse(rawContent),
+      usage: usage ? {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+      } : undefined
+    };
   }
 
-  async generatePRDescription(diff: string): Promise<string> {
+  async generatePRDescription(diff: string): Promise<AIResponse> {
     const prompt = PromptBuilder.buildPRPrompt(diff, this.config.prSections, this.config.language);
 
     const response = await this.client.chat.completions.create({
@@ -42,6 +50,14 @@ export class OpenAICompatibleProvider implements AIProvider {
     });
 
     const rawContent = response.choices[0].message.content || '';
-    return Formatter.cleanResponse(rawContent);
+    const usage = response.usage;
+
+    return {
+      content: Formatter.cleanResponse(rawContent),
+      usage: usage ? {
+        promptTokens: usage.prompt_tokens,
+        completionTokens: usage.completion_tokens,
+      } : undefined
+    };
   }
 }

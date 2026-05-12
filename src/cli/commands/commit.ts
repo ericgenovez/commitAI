@@ -5,6 +5,7 @@ import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 import { initAction } from './init';
+import { formatUsage, getEfficiencyNote } from '../../utils/costs';
 
 export async function commitAction() {
   try {
@@ -45,13 +46,16 @@ export async function commitAction() {
     const provider = ProviderFactory.getProvider(config);
 
     let currentMessage = '';
+    let currentUsage: any = null;
     let confirmed = false;
 
     while (!confirmed) {
       if (!currentMessage) {
         const spinner = logger.spinner(`Gerando mensagem com ${config.provider}...`);
         try {
-          currentMessage = await provider.generateCommitMessage(truncatedDiff);
+          const response = await provider.generateCommitMessage(truncatedDiff);
+          currentMessage = response.content;
+          currentUsage = response.usage;
           spinner.succeed('Mensagem gerada!\n');
         } catch (error: any) {
           spinner.fail('Erro ao gerar mensagem.');
@@ -62,7 +66,18 @@ export async function commitAction() {
 
       console.log(Buffer.alloc(40, '-').toString());
       console.log(currentMessage);
-      console.log(Buffer.alloc(40, '-').toString() + '\n');
+      console.log(Buffer.alloc(40, '-').toString());
+
+      if (currentUsage) {
+        const usageText = formatUsage({
+          promptTokens: currentUsage.promptTokens,
+          completionTokens: currentUsage.completionTokens,
+        });
+        console.log(`📊 ${usageText}`);
+        console.log(`💡 ${getEfficiencyNote(config.model)}\n`);
+      } else {
+        console.log('');
+      }
 
       const { action } = await inquirer.prompt([
         {

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { AIProvider, ProviderOptions } from './base';
+import { AIProvider, AIResponse, ProviderOptions } from './base';
 import { PromptBuilder } from '../core/prompt-builder';
 import { Formatter } from '../core/formatter';
 import { CommitAIConfig } from '../config/schema';
@@ -13,7 +13,7 @@ export class AnthropicProvider implements AIProvider {
     this.config = options;
   }
 
-  async generateCommitMessage(diff: string): Promise<string> {
+  async generateCommitMessage(diff: string): Promise<AIResponse> {
     const prompt = PromptBuilder.buildCommitPrompt(diff, {
       language: this.config.language,
       projectContext: this.config.projectContext,
@@ -26,10 +26,18 @@ export class AnthropicProvider implements AIProvider {
     });
 
     const content = response.content[0].type === 'text' ? response.content[0].text : '';
-    return Formatter.cleanResponse(content);
+    const usage = response.usage;
+
+    return {
+      content: Formatter.cleanResponse(content),
+      usage: usage ? {
+        promptTokens: usage.input_tokens,
+        completionTokens: usage.output_tokens,
+      } : undefined
+    };
   }
 
-  async generatePRDescription(diff: string): Promise<string> {
+  async generatePRDescription(diff: string): Promise<AIResponse> {
     const prompt = PromptBuilder.buildPRPrompt(diff, this.config.prSections, this.config.language);
 
     const response = await this.client.messages.create({
@@ -39,6 +47,14 @@ export class AnthropicProvider implements AIProvider {
     });
 
     const content = response.content[0].type === 'text' ? response.content[0].text : '';
-    return Formatter.cleanResponse(content);
+    const usage = response.usage;
+
+    return {
+      content: Formatter.cleanResponse(content),
+      usage: usage ? {
+        promptTokens: usage.input_tokens,
+        completionTokens: usage.output_tokens,
+      } : undefined
+    };
   }
 }

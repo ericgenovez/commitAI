@@ -6,6 +6,7 @@ import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
 import { clipboard } from '../../utils/clipboard';
 import { initAction } from './init';
+import { formatUsage, getEfficiencyNote } from '../../utils/costs';
 
 export async function prAction() {
   try {
@@ -65,13 +66,16 @@ export async function prAction() {
     const provider = ProviderFactory.getProvider(config);
 
     let currentPRDescription = '';
+    let currentUsage: any = null;
     let confirmed = false;
 
     while (!confirmed) {
       if (!currentPRDescription) {
         spinner.start(`Gerando descrição de PR com ${config.provider}...`);
         try {
-          currentPRDescription = await provider.generatePRDescription(truncatedDiff);
+          const response = await provider.generatePRDescription(truncatedDiff, config.prTemplate.sections);
+          currentPRDescription = response.content;
+          currentUsage = response.usage;
           spinner.succeed('Descrição gerada!\n');
         } catch (error: any) {
           spinner.fail('Erro ao gerar descrição.');
@@ -82,7 +86,18 @@ export async function prAction() {
 
       console.log(Buffer.alloc(40, '-').toString());
       console.log(currentPRDescription);
-      console.log(Buffer.alloc(40, '-').toString() + '\n');
+      console.log(Buffer.alloc(40, '-').toString());
+
+      if (currentUsage) {
+        const usageText = formatUsage({
+          promptTokens: currentUsage.promptTokens,
+          completionTokens: currentUsage.completionTokens,
+        });
+        console.log(`📊 ${usageText}`);
+        console.log(`💡 ${getEfficiencyNote(config.model)}\n`);
+      } else {
+        console.log('');
+      }
 
       const { action } = await inquirer.prompt([
         {
