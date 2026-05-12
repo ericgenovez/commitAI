@@ -4,10 +4,31 @@ import { loadConfig } from '../../config/loader';
 import { ProviderFactory } from '../../providers/factory';
 import { truncateDiff } from '../../utils/truncate';
 import { logger } from '../../utils/logger';
+import { initAction } from './init';
 
 export async function commitAction() {
   try {
-    const config = loadConfig();
+    let config = loadConfig();
+
+    if (!config.apiKey && !process.env.VITEST) {
+      logger.warn('API Key não encontrada.');
+      const { runInit } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'runInit',
+          message: 'Deseja configurar o CommitAI agora?',
+          default: true,
+        },
+      ]);
+
+      if (runInit) {
+        await initAction();
+        config = loadConfig(); // Reload config after init
+      } else {
+        logger.error('Para usar o CommitAI, você precisa definir uma API Key.');
+        return;
+      }
+    }
 
     if (!(await gitManager.isRepo())) {
       logger.error('Diretório atual não é um repositório Git.');

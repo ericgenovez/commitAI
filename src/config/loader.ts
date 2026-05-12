@@ -41,12 +41,6 @@ export function loadConfig(): CommitAIConfig {
 
   const apiKey = process.env.COMMITAI_API_KEY || config.apiKey;
 
-  if (!apiKey && !process.env.VITEST) {
-    console.error('\n[CommitAI] ❌ Erro: API Key não encontrada.');
-    console.error('Para usar o CommitAI, você precisa definir a variável COMMITAI_API_KEY no seu arquivo .env, no ambiente do sistema, ou em ~/.commitai/config.json\n');
-    process.exit(1);
-  }
-
   const mergedConfig = {
     ...config,
     apiKey,
