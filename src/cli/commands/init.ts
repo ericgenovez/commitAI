@@ -25,7 +25,7 @@ export async function initAction() {
 
   const configPath = path.join(configDir, 'config.json');
 
-  const { provider, apiKey, language, emojis } = await inquirer.prompt([
+  const { provider, apiKey, language, emojis, commitLength } = await inquirer.prompt([
     {
       type: 'list',
       name: 'provider',
@@ -60,6 +60,16 @@ export async function initAction() {
       message: 'Habilitar emojis nas mensagens?',
       default: true,
     },
+    {
+      type: 'list',
+      name: 'commitLength',
+      message: 'Estilo das mensagens de commit:',
+      choices: [
+        { name: '📝 Curto (Apenas o título)', value: 'short' },
+        { name: '📄 Detalhado (Título + Lista de mudanças)', value: 'detailed' },
+      ],
+      default: 'detailed',
+    },
   ]);
 
   const config = {
@@ -67,6 +77,7 @@ export async function initAction() {
     apiKey: apiKey || undefined,
     language,
     emojis,
+    commitLength,
     model: provider === 'openai' ? 'gpt-5-mini' : undefined, // Defaults depend on provider
   };
 
