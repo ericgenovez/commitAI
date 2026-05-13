@@ -39,6 +39,8 @@
     "chalk": "^4.1.2",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
+    "figlet": "^1.11.0",
+    "gradient-string": "^3.0.0",
     "i18next": "^26.1.0",
     "inquirer": "^8.2.6",
     "openai": "^4.83.0",
@@ -47,6 +49,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/figlet": "^1.7.0",
     "@types/inquirer": "^8.2.10",
     "@types/node": "^22.10.1",
     "tsup": "^8.3.6",

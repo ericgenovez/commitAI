@@ -13,6 +13,7 @@ import { t } from '../../utils/i18n';
 
 export async function commitAction(options: { model?: string } = {}) {
   try {
+    logger.banner();
     let config = loadConfig();
 
     if (options.model) {
@@ -111,14 +112,27 @@ export async function commitAction(options: { model?: string } = {}) {
       }
 
       if (step === 'review') {
-        console.log('\n' + boxen(chalk.white(currentMessage), {
-          padding: 1,
-          margin: { top: 1, bottom: 0, left: 0, right: 0 },
-          borderStyle: 'round',
-          borderColor: 'cyan',
-          title: chalk.bold.cyan(t('commit.suggested_message_title')),
-          titleAlignment: 'center',
-        }));
+        const providerColors: Record<string, string> = {
+          openai: '#74aa9c',
+          anthropic: '#d97757',
+          gemini: '#4285f4',
+          deepseek: '#606bc7',
+          ollama: '#ffffff',
+        };
+
+        const borderColor = providerColors[config.provider] || 'cyan';
+
+        console.log(
+          '\n' +
+            boxen(chalk.white(currentMessage), {
+              padding: 1,
+              margin: { top: 1, bottom: 0, left: 0, right: 0 },
+              borderStyle: 'round',
+              borderColor: borderColor,
+              title: chalk.bold(t('commit.suggested_message_title')),
+              titleAlignment: 'center',
+            }),
+        );
 
         if (currentUsage) {
           const usageText = formatUsage({

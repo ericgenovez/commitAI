@@ -28,6 +28,7 @@ async function hasGitHubCLI() {
 
 export async function prAction(options: { model?: string } = {}) {
   try {
+    logger.banner();
     let config = loadConfig();
 
     if (options.model) {
@@ -114,14 +115,27 @@ export async function prAction(options: { model?: string } = {}) {
       }
 
       if (step === 'review') {
-        console.log('\n' + boxen(chalk.white(currentPRDescription), {
-          padding: 1,
-          margin: { top: 1, bottom: 0, left: 0, right: 0 },
-          borderStyle: 'round',
-          borderColor: 'magenta',
-          title: chalk.bold.magenta(t('pr.suggested_description_title')),
-          titleAlignment: 'center',
-        }));
+        const providerColors: Record<string, string> = {
+          openai: '#74aa9c',
+          anthropic: '#d97757',
+          gemini: '#4285f4',
+          deepseek: '#606bc7',
+          ollama: '#ffffff',
+        };
+
+        const borderColor = providerColors[config.provider] || 'magenta';
+
+        console.log(
+          '\n' +
+            boxen(chalk.white(currentPRDescription), {
+              padding: 1,
+              margin: { top: 1, bottom: 0, left: 0, right: 0 },
+              borderStyle: 'round',
+              borderColor: borderColor,
+              title: chalk.bold(t('pr.suggested_description_title')),
+              titleAlignment: 'center',
+            }),
+        );
 
         if (currentUsage) {
           const usageText = formatUsage({
