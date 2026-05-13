@@ -91,7 +91,7 @@ export async function initAction() {
     language,
     emojis,
     commitLength,
-    model: provider === 'openai' ? 'gpt-5-mini' : undefined, // Defaults depend on provider
+    model: provider === 'openai' ? 'gpt-5-mini' : (provider === 'gemini' ? 'gemini-2.0-flash' : undefined), // Defaults depend on provider
   };
 
   if (!fs.existsSync(configDir)) {

@@ -19,6 +19,7 @@
 - **Integración con el Navegador**: Abre las páginas de creación de PR en GitHub/GitLab con el título y la descripción completados.
 - **Edición Interactiva**: Se integra con su editor predeterminado (VS Code, Vim, etc.) para revisiones manuales.
 - **Localización Global**: Toda la interfaz de la CLI está disponible en inglés, portugués y español.
+- **Soporte Multi-Proveedor**: Soporta OpenAI, Anthropic, Google Gemini, DeepSeek y modelos locales vía Ollama.
 - **Optimización de Costos**: Ignora automáticamente lockfiles y binarios para ahorrar tokens.
 
 ## 📦 Instalación
@@ -30,6 +31,7 @@ npm install -g @ericgenovez/commitai
 ```
 
 ### Uso a través de npx (sin instalación)
+
 ```bash
 npx @ericgenovez/commitai commit
 ```
@@ -37,38 +39,57 @@ npx @ericgenovez/commitai commit
 ## 🛠️ Guía de Uso
 
 ### 1. Configuración Inicial
-Ejecute el siguiente comando para configurar su proveedor de IA (OpenAI, Anthropic, DeepSeek u Ollama) y su API Key:
+
+Ejecute el siguiente comando para configurar su proveedor de IA y su API Key:
+
 ```bash
 commitai init
 ```
 
 ### 2. Generar Mensaje de Commit
+
 Después de agregar sus archivos al stage (`git add .`), ejecute:
+
 ```bash
 commitai commit
 ```
+
 La herramienta presentará una sugerencia. Puede aceptarla, editarla en su editor predeterminado o regenerarla.
 
 ### 3. Generar Pull Request
+
 Para crear una descripción de PR y abrirla en el navegador:
+
 ```bash
 commitai pr
 ```
+
 El sistema le preguntará por la rama de destino, generará el contenido y le ofrecerá realizar un `push` antes de abrir el navegador.
 
 ## ⚙️ Configuración Avanzada
 
-Puede administrar los ajustes de forma granular sin tener que volver a ejecutar el asistente de configuración completo.
+Puede administrar los ajustes a través de un menú interactivo completo.
 
 ### Usando el comando `config`
-- **Listar todos los ajustes**: `commitai config list`
-- **Establecer un valor específico**: `commitai config set commitLength short`
-- **Obtener un valor**: `commitai config get provider`
 
-### Claves Soportadas
-- `provider`: `openai`, `anthropic`, `deepseek`, `ollama`
-- `model`: Modelo de IA (ej: `gpt-5-mini`, `claude-3-5-sonnet`)
-- `language`: Idioma de salida (`en`, `pt-BR`, `es`)
+Simplemente ejecute:
+
+```bash
+commitai config
+```
+
+Esto abrirá un menú interactivo donde puede:
+
+- **🤖 Configurar Proveedor de IA**: Flujo unificado para cambiar Proveedor, Modelo y API Key de una sola vez.
+- **🌐 Cambiar Idioma del CLI**: Cambia instantáneamente el idioma de la interfaz del terminal.
+- **Ajustar otras opciones**: Refinar el uso de emojis, estilo de commit, convenciones y más.
+
+### Claves Soportadas (para uso vía CLI)
+
+- `provider`: `openai`, `anthropic`, `gemini`, `deepseek`, `ollama`
+- `model`: Modelo de IA (ej: `gpt-5-mini`, `gemini-2.0-flash`, `claude-3-5-sonnet`)
+- `language`: Idioma de salida de la IA (`en`, `pt-BR`, `es`)
+- `cliLanguage`: Idioma de la interfaz del terminal (`en`, `pt-BR`, `es`)
 - `commitLength`: `short` o `detailed`
 - `emojis`: `true` o `false`
 - `maxDiffLines`: Límite de líneas procesadas (Predeterminado: `600`)
@@ -76,6 +97,7 @@ Puede administrar los ajustes de forma granular sin tener que volver a ejecutar 
 ## 🤖 IA Local con Ollama
 
 CommitAI admite la ejecución local mediante Ollama.
+
 1. Instale [Ollama](https://ollama.ai/).
 2. Descargue un modelo (ej: `ollama pull llama3`).
 3. Ejecute `commitai init`, seleccione `Ollama` e ingrese `llama3` como modelo.

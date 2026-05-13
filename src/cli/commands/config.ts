@@ -76,8 +76,13 @@ async function interactiveConfig() {
           )
           .map(([key, val]) => {
             const friendlyName = t(`config.label_${key}`) || key;
-            const displayValue =
-              typeof val === 'object' ? JSON.stringify(val) : val;
+            let displayValue = val;
+            
+            if (val === true) displayValue = t('config.value_true');
+            else if (val === false) displayValue = t('config.value_false');
+            else if (key === 'commitLength') displayValue = t(`config.value_${val}`);
+            else if (typeof val === 'object') displayValue = JSON.stringify(val);
+
             return {
               name: `${chalk.cyan(friendlyName)}: ${chalk.white(displayValue)}`,
               value: key,
@@ -92,7 +97,7 @@ async function interactiveConfig() {
   if (keyToEdit === 'exit') return;
 
   if (keyToEdit === 'setup_ai') {
-    await setupAIProvider(config);
+    const success = await setupAIProvider(config);
     return interactiveConfig(); // Recursive call for "Back" behavior
   }
 
@@ -117,6 +122,8 @@ async function interactiveConfig() {
         { name: 'Português (Brasil)', value: 'pt-BR' },
         { name: 'English', value: 'en' },
         { name: 'Español', value: 'es' },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
       ];
       break;
     case 'convention':
@@ -125,17 +132,27 @@ async function interactiveConfig() {
         { name: 'Conventional Commits', value: 'conventional' },
         { name: 'Angular', value: 'angular' },
         { name: 'Karma', value: 'karma' },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
       ];
       break;
     case 'commitLength':
       promptConfig.type = 'list';
       promptConfig.choices = [
-        { name: t('init.length_short'), value: 'short' },
-        { name: t('init.length_detailed'), value: 'detailed' },
+        { name: t('config.value_short'), value: 'short' },
+        { name: t('config.value_detailed'), value: 'detailed' },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
       ];
       break;
     case 'emojis':
-      promptConfig.type = 'confirm';
+      promptConfig.type = 'list';
+      promptConfig.choices = [
+        { name: t('config.value_true'), value: true },
+        { name: t('config.value_false'), value: false },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
+      ];
       break;
     case 'maxDiffLines':
       promptConfig.type = 'input';
@@ -148,11 +165,13 @@ async function interactiveConfig() {
 
   const { newValue } = await inquirer.prompt([promptConfig]);
 
+  if (newValue === 'back') return interactiveConfig();
+
   setConfigValue(keyToEdit, newValue);
   return interactiveConfig(); // Return to menu after editing
 }
 
-async function setupAIProvider(currentConfig: any) {
+async function setupAIProvider(currentConfig: any): Promise<boolean> {
   const { provider } = await inquirer.prompt([
     {
       type: 'list',
@@ -165,13 +184,17 @@ async function setupAIProvider(currentConfig: any) {
         { name: 'Google (Gemini)', value: 'gemini' },
         { name: 'DeepSeek', value: 'deepseek' },
         { name: 'Ollama (Local)', value: 'ollama' },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
       ],
     },
   ]);
 
+  if (provider === 'back') return false;
+
   let defaultModel = currentConfig.model;
   if (provider === 'openai') defaultModel = 'gpt-5-mini';
-  if (provider === 'gemini') defaultModel = 'gemini-2.5-flash';
+  if (provider === 'gemini') defaultModel = 'gemini-2.0-flash';
   if (provider === 'anthropic') defaultModel = 'claude-3-5-sonnet-latest';
 
   const { model } = await inquirer.prompt([
@@ -196,6 +219,7 @@ async function setupAIProvider(currentConfig: any) {
   if (apiKey) updates.apiKey = apiKey;
 
   setMultipleConfigValues(updates);
+  return true;
 }
 
 async function changeCLILanguage(currentConfig: any) {
@@ -209,9 +233,13 @@ async function changeCLILanguage(currentConfig: any) {
         { name: 'Português (Brasil)', value: 'pt-BR' },
         { name: 'English', value: 'en' },
         { name: 'Español', value: 'es' },
+        new inquirer.Separator(),
+        { name: t('config.back'), value: 'back' }
       ],
     },
   ]);
+
+  if (cliLanguage === 'back') return;
 
   setConfigValue('cliLanguage', cliLanguage);
 }

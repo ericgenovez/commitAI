@@ -49,6 +49,10 @@
     "label_projectContext": "📁 Project Context",
     "label_prTemplate": "📋 PR Template",
     "back": "⬅️ Back",
+    "value_true": "Yes",
+    "value_false": "No",
+    "value_short": "Short (Title only)",
+    "value_detailed": "Detailed (Title + Changes)",
     "enter_new_value": "Enter the new value for {{key}}:",
     "exit": "Exit"
   },

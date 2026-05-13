@@ -2,6 +2,7 @@ import { OpenAIProvider } from './openai';
 import { AnthropicProvider } from './anthropic';
 import { DeepSeekProvider } from './deepseek';
 import { OllamaProvider } from './ollama';
+import { GeminiProvider } from './gemini';
 import { AIProvider } from './base';
 import { CommitAIConfig } from '../config/schema';
 
@@ -26,6 +27,8 @@ export class ProviderFactory {
         return new DeepSeekProvider(options);
       case 'ollama':
         return new OllamaProvider(options);
+      case 'gemini':
+        return new GeminiProvider(options);
       default:
         throw new Error(`Provedor '${config.provider}' ainda não suportado ou não implementado.`);
     }

@@ -49,6 +49,10 @@
     "label_projectContext": "📁 Contexto del Proyecto",
     "label_prTemplate": "📋 Plantilla de PR",
     "back": "⬅️ Volver",
+    "value_true": "Sí",
+    "value_false": "No",
+    "value_short": "Corto (Solo título)",
+    "value_detailed": "Detallado (Título + Cambios)",
     "enter_new_value": "Ingrese el nuevo valor para {{key}}:",
     "exit": "Salir"
   },
