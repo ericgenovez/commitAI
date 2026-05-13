@@ -5,7 +5,10 @@
     "configure_now": "Deseja configurar o CommitAI agora?",
     "invalid_input": "Entrada inválida.",
     "branch_required": "O nome da branch não pode ser vazio.",
-    "select_at_least_one": "Selecione ao menos um arquivo."
+    "select_at_least_one": "Selecione ao menos um arquivo.",
+    "cancel": "Cancelar",
+    "yes": "Sim",
+    "no": "Não"
   },
   "init": {
     "welcome": "🚀 Bem-vindo ao configurador do CommitAI!",
@@ -28,10 +31,13 @@
     "unknown_subcommand": "Subcomando desconhecido: {{subcommand}}",
     "available_subcommands": "Subcomandos disponíveis: set, get, list",
     "invalid_value": "Valor inválido para a chave \"{{key}}\":",
-    "updated": "Configuração \"{{key}}\" atualizada para \"{{value}}\" em: {{path}}",
+    "updated": "Configuração \"{{key}}\" atualizada para \"{{value}}\"",
     "not_found": "Nenhum arquivo de configuração encontrado.",
     "key_not_defined": "Chave \"{{key}}\" não definida na configuração.",
-    "list_title": "Configurações em: {{path}}"
+    "list_title": "Configurações em: {{path}}",
+    "select_to_edit": "Selecione uma configuração para editar:",
+    "enter_new_value": "Digite o novo valor para {{key}}:",
+    "exit": "Sair"
   },
   "commit": {
     "generating": "Gerando sugestão com {{provider}}...",

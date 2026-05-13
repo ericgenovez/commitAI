@@ -10,6 +10,7 @@ import { formatUsage, getModelTier } from '../../utils/costs';
 import chalk from 'chalk';
 import { openInBrowser } from '../../utils/open';
 import boxen from 'boxen';
+import { t } from '../../utils/i18n';
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -34,12 +35,12 @@ export async function prAction(options: { model?: string } = {}) {
     }
 
     if (!config.apiKey && !process.env.VITEST) {
-      logger.warn('API Key não encontrada.');
+      logger.warn(t('common.api_key_not_found'));
       const { runInit } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'runInit',
-          message: 'Deseja configurar o CommitAI agora?',
+          message: t('common.configure_now'),
           default: true,
         },
       ]);
@@ -48,13 +49,13 @@ export async function prAction(options: { model?: string } = {}) {
         await initAction();
         config = loadConfig();
       } else {
-        logger.error('Para usar o CommitAI, você precisa definir uma API Key.');
+        logger.error(t('common.api_key_required'));
         return;
       }
     }
 
     if (!(await gitManager.isRepo())) {
-      logger.error('Diretório atual não é um repositório Git.');
+      logger.error(t('pr.not_repo'));
       return;
     }
 
@@ -69,9 +70,9 @@ export async function prAction(options: { model?: string } = {}) {
           {
             type: 'input',
             name: 'branch',
-            message: 'Qual a branch de destino (target branch)?',
+            message: t('pr.branch_question'),
             default: targetBranch,
-            validate: (input) => input.trim().length > 0 || 'O nome da branch não pode ser vazio.',
+            validate: (input) => input.trim().length > 0 || t('common.branch_required'),
           },
         ]);
         targetBranch = branch;
@@ -79,22 +80,23 @@ export async function prAction(options: { model?: string } = {}) {
       }
 
       if (step === 'generate') {
-        const spinner = logger.spinner(`Obtendo diff com a branch ${chalk.cyan(targetBranch)}...`);
+        const spinner = logger.spinner(t('pr.diff_fetching', { branch: chalk.cyan(targetBranch) }));
         let diff: string;
         try {
           diff = await gitManager.getBranchDiff(targetBranch);
           if (!diff) {
             spinner.stop();
-            logger.warn('Nenhuma diferença encontrada entre as branches.');
+            const head = await gitManager.getCurrentBranch();
+            logger.warn(t('pr.no_changes', { base: targetBranch, head }));
             step = 'ask_branch';
             continue;
           }
           
-          spinner.text = `Gerando descrição com ${chalk.cyan(config.provider)}...`;
+          spinner.text = t('pr.generating', { provider: chalk.cyan(config.provider) });
           const truncatedDiff = truncateDiff(diff, config.maxDiffLines);
           
           if (diff.split('\n').length > config.maxDiffLines) {
-            logger.warn(`O diff é muito grande (${diff.split('\n').length} linhas) e foi truncado para ${config.maxDiffLines} linhas.`);
+            logger.warn(t('pr.diff_too_large', { lines: diff.split('\n').length, max: config.maxDiffLines }));
           }
 
           const provider = ProviderFactory.getProvider(config);
@@ -102,10 +104,10 @@ export async function prAction(options: { model?: string } = {}) {
           
           currentPRDescription = response.content;
           currentUsage = response.usage;
-          spinner.succeed('Descrição gerada!\n');
+          spinner.succeed(t('pr.ready') + '\n');
           step = 'review';
         } catch (error: any) {
-          spinner.fail('Erro no processo.');
+          spinner.fail(t('pr.fail'));
           logger.error(error.message);
           return;
         }
@@ -117,7 +119,7 @@ export async function prAction(options: { model?: string } = {}) {
           margin: { top: 1, bottom: 0, left: 0, right: 0 },
           borderStyle: 'round',
           borderColor: 'magenta',
-          title: chalk.bold.magenta(' 📝 Descrição do PR '),
+          title: chalk.bold.magenta(t('pr.suggested_description_title')),
           titleAlignment: 'center',
         }));
 
@@ -131,41 +133,42 @@ export async function prAction(options: { model?: string } = {}) {
 
         const canUseGH = await hasGitHubCLI();
         const choices = [
-          { name: '📋 Copiar para o clipboard', value: 'copy' },
-          { name: '🌐 Abrir no navegador', value: 'browser' },
-          ...(canUseGH ? [{ name: '🐙 Criar PR via GitHub CLI (gh)', value: 'gh' }] : []),
-          { name: '✍️  Editar manualmente', value: 'edit' },
-          { name: '🔄 Voltar para escolha de branch', value: 'ask_branch' },
-          { name: '❌ Cancelar', value: 'cancel' },
+          { name: t('pr.action_copy'), value: 'copy' },
+          { name: t('pr.action_browser'), value: 'browser' },
+          ...(canUseGH ? [{ name: t('pr.action_gh'), value: 'gh' }] : []),
+          { name: t('pr.action_edit'), value: 'edit' },
+          { name: t('pr.action_branch'), value: 'ask_branch' },
+          { name: t('commit.action_cancel'), value: 'cancel' },
         ];
 
         const { action } = await inquirer.prompt([
           {
             type: 'list',
             name: 'action',
-            message: 'O que deseja fazer?',
+            message: t('pr.action_question'),
             choices,
           },
         ]);
 
         // Se for abrir navegador ou GH CLI, verifica se precisa de push
         if (action === 'browser' || action === 'gh') {
+          const currentBranch = await gitManager.getCurrentBranch();
           const { confirmPush } = await inquirer.prompt([
             {
               type: 'confirm',
               name: 'confirmPush',
-              message: 'Deseja realizar o push da branch para o origin antes de prosseguir?',
+              message: t('pr.push_question', { head: currentBranch }),
               default: true,
             },
           ]);
 
           if (confirmPush) {
-            const pushSpinner = logger.spinner('Realizando push para origin...');
+            const pushSpinner = logger.spinner(t('pr.pushing'));
             try {
               await gitManager.push();
-              pushSpinner.succeed('Push realizado com sucesso!');
+              pushSpinner.succeed(t('pr.push_success'));
             } catch (error: any) {
-              pushSpinner.fail('Erro ao realizar push.');
+              pushSpinner.fail(t('pr.push_fail'));
               logger.error(error.message);
               continue; // Volta para o menu de review
             }
@@ -175,7 +178,7 @@ export async function prAction(options: { model?: string } = {}) {
         switch (action) {
           case 'copy':
             await clipboard.copy(currentPRDescription);
-            logger.success('Copiado para o clipboard!');
+            logger.success(t('commit.copy_success'));
             break;
           case 'browser':
             const remoteUrl = await gitManager.getRemoteUrl();
@@ -208,15 +211,15 @@ export async function prAction(options: { model?: string } = {}) {
               }
               if (prUrl) {
                 await clipboard.copy(currentPRDescription);
-                logger.info('Descrição copiada para facilitar o preenchimento.');
+                logger.info(t('pr.copy_info'));
                 await openInBrowser(prUrl);
-                logger.success('Navegador aberto!');
+                logger.success(t('pr.browser_success'));
                 step = 'done';
               }
             }
             break;
           case 'gh':
-            const spinner = logger.spinner('Criando PR via GitHub CLI...');
+            const spinner = logger.spinner(t('pr.gh_creating'));
             try {
               // Salva descrição em arquivo temporário para evitar problemas de escape
               const fs = require('fs');
@@ -224,10 +227,10 @@ export async function prAction(options: { model?: string } = {}) {
               fs.writeFileSync(tmpFile, currentPRDescription);
               await execAsync(`gh pr create --base ${targetBranch} --title "PR gerada por CommitAI" --body-file ${tmpFile}`);
               fs.unlinkSync(tmpFile);
-              spinner.succeed('PR criada com sucesso!');
+              spinner.succeed(t('pr.gh_success'));
               step = 'done';
             } catch (error: any) {
-              spinner.fail('Erro ao usar GitHub CLI.');
+              spinner.fail(t('pr.gh_fail'));
               logger.error(error.message);
             }
             break;
@@ -248,7 +251,7 @@ export async function prAction(options: { model?: string } = {}) {
           {
             type: 'editor',
             name: 'editedPR',
-            message: 'Edite a descrição do PR no seu editor:',
+            message: t('pr.edit_prompt'),
             default: currentPRDescription,
           },
         ]);

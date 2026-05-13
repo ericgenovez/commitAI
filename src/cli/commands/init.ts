@@ -3,18 +3,19 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { logger } from '../../utils/logger';
+import { t } from '../../utils/i18n';
 
 export async function initAction() {
-  logger.info('🚀 Bem-vindo ao configurador do CommitAI!\n');
+  logger.info(t('init.welcome') + '\n');
 
   const { location } = await inquirer.prompt([
     {
       type: 'list',
       name: 'location',
-      message: 'Onde deseja salvar a configuração?',
+      message: t('init.location_question'),
       choices: [
-        { name: '🌎 Global (Home do usuário - recomendado)', value: 'global' },
-        { name: '📁 Local (Pasta do projeto atual)', value: 'local' },
+        { name: t('init.location_global'), value: 'global' },
+        { name: t('init.location_local'), value: 'local' },
       ],
     },
   ]);
@@ -29,7 +30,7 @@ export async function initAction() {
     {
       type: 'list',
       name: 'provider',
-      message: 'Escolha o provedor de IA:',
+      message: t('init.provider_question'),
       choices: [
         { name: 'OpenAI', value: 'openai' },
         { name: 'Anthropic (Claude)', value: 'anthropic' },
@@ -40,13 +41,13 @@ export async function initAction() {
     {
       type: 'password',
       name: 'apiKey',
-      message: 'Insira sua API Key (deixe em branco para usar variável de ambiente):',
+      message: t('init.apikey_question'),
       mask: '*',
     },
     {
       type: 'list',
       name: 'language',
-      message: 'Idioma das mensagens:',
+      message: t('init.language_question'),
       choices: [
         { name: 'Português (Brasil)', value: 'pt-BR' },
         { name: 'English', value: 'en' },
@@ -57,16 +58,16 @@ export async function initAction() {
     {
       type: 'confirm',
       name: 'emojis',
-      message: 'Habilitar emojis nas mensagens?',
+      message: t('init.emojis_question'),
       default: true,
     },
     {
       type: 'list',
       name: 'commitLength',
-      message: 'Estilo das mensagens de commit:',
+      message: t('init.length_question'),
       choices: [
-        { name: '📝 Curto (Apenas o título)', value: 'short' },
-        { name: '📄 Detalhado (Título + Lista de mudanças)', value: 'detailed' },
+        { name: t('init.length_short'), value: 'short' },
+        { name: t('init.length_detailed'), value: 'detailed' },
       ],
       default: 'detailed',
     },
@@ -87,6 +88,6 @@ export async function initAction() {
 
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-  logger.success(`\n✅ Configuração salva com sucesso em: ${configPath}`);
-  logger.info('Agora você já pode usar "commitai commit" para gerar suas mensagens!');
+  logger.success(t('init.success', { path: configPath }));
+  logger.info(t('init.next_steps'));
 }
