@@ -4,7 +4,7 @@ export const ConfigSchema = z.object({
   provider: z
     .enum(['openai', 'anthropic', 'deepseek', 'ollama'])
     .default('openai'),
-  model: z.string().default('gpt-4o-mini'),
+  model: z.string().default('gpt-5-mini'),
   apiKey: z.string().optional(),
   language: z.string().default('pt-BR'),
   convention: z

@@ -67,7 +67,7 @@ export async function initAction() {
     apiKey: apiKey || undefined,
     language,
     emojis,
-    model: provider === 'openai' ? 'gpt-4o-mini' : undefined, // Defaults depend on provider
+    model: provider === 'openai' ? 'gpt-5-mini' : undefined, // Defaults depend on provider
   };
 
   if (!fs.existsSync(configDir)) {

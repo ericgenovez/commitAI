@@ -1,6 +1,6 @@
 {
   "name": "@ericgenovez/commitai",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Professional CLI tool to generate conventional commits and PR descriptions using AI",
   "author": "Eric Genovez",
   "license": "MIT",

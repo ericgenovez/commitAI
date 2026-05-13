@@ -25,7 +25,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     const response = await this.client.chat.completions.create({
       model: this.config.model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      temperature: this.config.model.includes('gpt-5') ? 1.0 : 0.7,
     });
 
     const rawContent = response.choices[0].message.content || '';
@@ -46,7 +46,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     const response = await this.client.chat.completions.create({
       model: this.config.model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      temperature: this.config.model.includes('gpt-5') ? 1.0 : 0.7,
     });
 
     const rawContent = response.choices[0].message.content || '';

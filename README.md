@@ -60,7 +60,7 @@ As configurações ficam armazenadas em seu diretório pessoal em `~/.commitai/c
 ### Sobrescrita de Modelo
 Você pode utilizar um modelo diferente para uma execução específica usando a flag `--model`:
 ```bash
-commitai commit --model gpt-4o
+commitai commit --model gpt-5-mini
 ```
 
 ## Desenvolvimento
@@ -72,8 +72,13 @@ npm install
 # Execução em modo desenvolvimento
 npm run dev -- commit
 
-# Build de produção
+# Build de produção e teste local
 npm run build
+node dist/index.js commit
+
+# Linkar globalmente para teste final
+npm link
+commitai commit
 ```
 
 ## Licença
