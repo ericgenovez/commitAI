@@ -13,6 +13,8 @@ export class ProviderFactory {
       language: config.language,
       projectContext: config.projectContext,
       prSections: config.prTemplate.sections,
+      commitLength: config.commitLength,
+      emojis: config.emojis,
     };
 
     switch (config.provider) {

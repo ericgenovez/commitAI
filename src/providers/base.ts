@@ -15,4 +15,6 @@ export interface ProviderOptions {
   apiKey: string;
   model: string;
   language: string;
+  commitLength?: 'short' | 'detailed';
+  emojis?: boolean;
 }
