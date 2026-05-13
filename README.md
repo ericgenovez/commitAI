@@ -1,86 +1,101 @@
 # @ericgenovez/commitai
 
-O **CommitAI** é uma ferramenta de linha de comando (CLI) projetada para automatizar e padronizar fluxos de trabalho do Git utilizando Inteligência Artificial. A ferramenta analisa suas alterações e gera mensagens de commit e descrições de Pull Request seguindo padrões da indústria como **Conventional Commits**.
+**CommitAI** is a professional Command Line Interface (CLI) designed to automate and standardize Git workflows using Artificial Intelligence. It analyzes your changes and generates high-quality commit messages and Pull Request descriptions following industry standards like **Conventional Commits**.
 
 [![NPM Version](https://img.shields.io/npm/v/@ericgenovez/commitai.svg)](https://www.npmjs.com/package/@ericgenovez/commitai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Funcionalidades Principais
+---
 
-- **Commits Padronizados**: Gera mensagens baseadas no seu `git diff --staged` utilizando o padrão Conventional Commits.
-- **Mentor de Commits**: Caso o volume de alterações seja muito grande, a ferramenta sugere a separação de arquivos para manter commits atômicos e organizados.
-- **Descrições de PR Inteligentes**: Cria descrições detalhadas comparando branches e extraindo títulos técnicos automaticamente.
-- **Integração com Browser**: Abre a página de criação de Pull Request no GitHub ou GitLab com título e descrição já preenchidos.
-- **Edição Profissional**: Integra-se ao seu editor de texto padrão (VS Code, Notepad, Vim) para revisões manuais complexas.
-- **Filtro Automático**: Ignora arquivos irrelevantes como lockfiles e binários para otimizar o processamento e custos.
+### [🇧🇷 Português](./README.pt-BR.md) | [🇪🇸 Español](./README.es.md)
 
-## Instalação
+---
 
-A instalação global é feita via NPM:
+## 🚀 Key Features
+
+- **Standardized Commits**: Generates messages based on your `git diff --staged` using the Conventional Commits pattern.
+- **Commit Mentor**: Suggests splitting large commits to maintain atomic and organized history.
+- **Smart PR Descriptions**: Compares branches and generates detailed descriptions automatically.
+- **Browser Integration**: Opens GitHub/GitLab PR creation pages with title and description pre-filled.
+- **Interactive Editing**: Integrates with your default editor (VS Code, Vim, etc.) for manual reviews.
+- **Global Localization**: The entire CLI interface is available in English, Portuguese, and Spanish.
+- **Cost Optimization**: Automatically ignores lockfiles and binaries to save tokens and costs.
+
+## 📦 Installation
+
+Global installation via NPM:
 
 ```bash
 npm install -g @ericgenovez/commitai
 ```
 
-### Uso via npx (sem instalação)
+### Usage via npx (without installation)
 ```bash
 npx @ericgenovez/commitai commit
 ```
 
-## Guia de Uso
+## 🛠️ Usage Guide
 
-### 1. Configuração Inicial
-Rode o comando abaixo para configurar seu provedor de IA (OpenAI, Anthropic, DeepSeek ou Ollama) e sua API Key:
+### 1. Initial Setup
+Run the command below to configure your AI provider (OpenAI, Anthropic, DeepSeek, or Ollama) and your API Key:
 ```bash
 commitai init
 ```
 
-### 2. Gerar Mensagem de Commit
-Após adicionar seus arquivos ao stage (`git add .`), execute:
+### 2. Generate Commit Message
+After adding your files to the stage (`git add .`), run:
 ```bash
 commitai commit
 ```
-A ferramenta apresentará uma sugestão. Você poderá aceitar, editar no seu editor padrão ou regenerar a mensagem.
+The tool will present a suggestion. You can accept, edit in your default editor, or regenerate it.
 
-### 3. Gerar Pull Request
-Para criar uma descrição de PR e abrir no navegador:
+### 3. Generate Pull Request
+To create a PR description and open it in the browser:
 ```bash
 commitai pr
 ```
-O sistema perguntará a branch de destino, gerará o conteúdo e oferecerá a opção de realizar o `push` automático antes de abrir o navegador.
+The system will ask for the destination branch, generate the content, and offer to `push` before opening the browser.
 
-## Configurações Avançadas
+## ⚙️ Advanced Configuration
 
-As configurações ficam armazenadas em seu diretório pessoal em `~/.commitai/config.json`.
+You can manage settings granularly without re-running the full setup assistant.
 
-### Controle de Limites
-- **`maxDiffLines`**: Define o limite de linhas processadas pela IA (Padrão: `600`).
-- **Filtros**: Arquivos como `package-lock.json`, imagens e binários são excluídos automaticamente.
+### Using the `config` command
+- **List all settings**: `commitai config list`
+- **Set a specific value**: `commitai config set commitLength short`
+- **Get a value**: `commitai config get provider`
 
-### Sobrescrita de Modelo
-Você pode utilizar um modelo diferente para uma execução específica usando a flag `--model`:
+### Supported Keys
+- `provider`: `openai`, `anthropic`, `deepseek`, `ollama`
+- `model`: AI Model (e.g., `gpt-5-mini`, `claude-3-5-sonnet`)
+- `language`: Output language (`en`, `pt-BR`, `es`)
+- `commitLength`: `short` or `detailed`
+- `emojis`: `true` or `false`
+- `maxDiffLines`: Line limit for processing (Default: `600`)
+
+## 🤖 Local AI with Ollama
+
+CommitAI supports local execution using Ollama.
+1. Install [Ollama](https://ollama.ai/).
+2. Pull a model (e.g., `ollama pull llama3`).
+3. Run `commitai init`, select `Ollama`, and enter `llama3` as the model.
+
+## 🛠️ Development
+
 ```bash
-commitai commit --model gpt-5-mini
-```
-
-## Desenvolvimento
-
-```bash
-# Instalação de dependências
+# Install dependencies
 npm install
 
-# Execução em modo desenvolvimento
+# Run in development mode
 npm run dev -- commit
 
-# Build de produção e teste local
+# Build for production
 npm run build
-node dist/index.js commit
 
-# Linkar globalmente para teste final
+# Link globally for testing
 npm link
-commitai commit
 ```
 
-## Licença
+## 📄 License
 
-Este projeto está licenciado sob a Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

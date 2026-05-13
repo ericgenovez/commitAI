@@ -9,6 +9,7 @@ import { initAction } from './init';
 import { formatUsage, getModelTier } from '../../utils/costs';
 import chalk from 'chalk';
 import boxen from 'boxen';
+import { t } from '../../utils/i18n';
 
 export async function commitAction(options: { model?: string } = {}) {
   try {
@@ -19,12 +20,12 @@ export async function commitAction(options: { model?: string } = {}) {
     }
 
     if (!config.apiKey && !process.env.VITEST) {
-      logger.warn('API Key não encontrada.');
+      logger.warn(t('common.api_key_not_found'));
       const { runInit } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'runInit',
-          message: 'Deseja configurar o CommitAI agora?',
+          message: t('common.configure_now'),
           default: true,
         },
       ]);
@@ -33,31 +34,31 @@ export async function commitAction(options: { model?: string } = {}) {
         await initAction();
         config = loadConfig();
       } else {
-        logger.error('Para usar o CommitAI, você precisa definir uma API Key.');
+        logger.error(t('common.api_key_required'));
         return;
       }
     }
 
     if (!(await gitManager.isRepo())) {
-      logger.error('Diretório atual não é um repositório Git.');
+      logger.error(t('commit.not_repo'));
       return;
     }
 
     let diff = await gitManager.getStagedDiff();
     if (!diff) {
-      logger.warn('Nenhuma alteração encontrada no stage. Use "git add" primeiro.');
+      logger.warn(t('commit.no_diff'));
       return;
     }
 
     // Lógica de "Mentor de Commits" para diffs grandes
     if (diff.split('\n').length > config.maxDiffLines) {
-      logger.warn(`O diff total é muito grande (${diff.split('\n').length} linhas).`);
+      logger.warn(t('commit.diff_too_large', { lines: diff.split('\n').length }));
       
       const { shouldFilter } = await inquirer.prompt([
         {
           type: 'confirm',
           name: 'shouldFilter',
-          message: 'Deseja selecionar arquivos específicos para este commit (recomendado para clareza e economia)?',
+          message: t('commit.filter_question'),
           default: true,
         },
       ]);
@@ -68,21 +69,21 @@ export async function commitAction(options: { model?: string } = {}) {
           {
             type: 'checkbox',
             name: 'selectedFiles',
-            message: 'Selecione os arquivos que farão parte deste commit:',
+            message: t('commit.select_files'),
             choices: stagedFiles,
-            validate: (input) => input.length > 0 || 'Selecione ao menos um arquivo.',
+            validate: (input) => input.length > 0 || t('common.select_at_least_one'),
           },
         ]);
 
         const filesToUnstage = stagedFiles.filter(f => !selectedFiles.includes(f));
         if (filesToUnstage.length > 0) {
-          const spinner = logger.spinner('Organizando stage...');
+          const spinner = logger.spinner(t('commit.unstage_spinner'));
           await gitManager.unstageFiles(filesToUnstage);
           diff = await gitManager.getStagedDiff();
-          spinner.succeed(`Stage atualizado! ${selectedFiles.length} arquivos mantidos, ${filesToUnstage.length} removidos para o próximo commit.`);
+          spinner.succeed(t('commit.unstage_success', { selected: selectedFiles.length, removed: filesToUnstage.length }));
         }
       } else {
-        logger.info(chalk.dim(`Prosseguindo com o diff truncado em ${config.maxDiffLines} linhas.`));
+        logger.info(chalk.dim(t('commit.proceed_truncated', { max: config.maxDiffLines })));
       }
     }
 
@@ -95,15 +96,15 @@ export async function commitAction(options: { model?: string } = {}) {
 
     while (step !== 'done') {
       if (step === 'generate') {
-        const spinner = logger.spinner(`Gerando sugestão com ${chalk.cyan(config.provider)}...`);
+        const spinner = logger.spinner(t('commit.generating', { provider: chalk.cyan(config.provider) }));
         try {
           const response = await provider.generateCommitMessage(truncatedDiff);
           currentMessage = response.content;
           currentUsage = response.usage;
-          spinner.succeed('Sugestão pronta!');
+          spinner.succeed(t('commit.ready'));
           step = 'review';
         } catch (error: any) {
-          spinner.fail('Erro ao gerar mensagem.');
+          spinner.fail(t('commit.fail'));
           logger.error(error.message);
           return;
         }
@@ -115,7 +116,7 @@ export async function commitAction(options: { model?: string } = {}) {
           margin: { top: 1, bottom: 0, left: 0, right: 0 },
           borderStyle: 'round',
           borderColor: 'cyan',
-          title: chalk.bold.cyan(' 💬 Mensagem Sugerida '),
+          title: chalk.bold.cyan(t('commit.suggested_message_title')),
           titleAlignment: 'center',
         }));
 
@@ -131,13 +132,13 @@ export async function commitAction(options: { model?: string } = {}) {
           {
             type: 'list',
             name: 'action',
-            message: 'O que deseja fazer?',
+            message: t('commit.action_question'),
             choices: [
-              { name: '🚀 Confirmar e Commitar', value: 'commit' },
-              { name: '📋 Copiar para o clipboard', value: 'copy' },
-              { name: '✍️  Editar manualmente', value: 'edit' },
-              { name: '🔄 Gerar novamente', value: 'generate' },
-              { name: '❌ Cancelar', value: 'cancel' },
+              { name: t('commit.action_commit'), value: 'commit' },
+              { name: t('commit.action_copy'), value: 'copy' },
+              { name: t('commit.action_edit'), value: 'edit' },
+              { name: t('commit.action_generate'), value: 'generate' },
+              { name: t('commit.action_cancel'), value: 'cancel' },
             ],
           },
         ]);
@@ -145,12 +146,12 @@ export async function commitAction(options: { model?: string } = {}) {
         switch (action) {
           case 'commit':
             await gitManager.commit(currentMessage);
-            logger.success('Commit realizado com sucesso!');
+            logger.success(t('commit.commit_success'));
             step = 'done';
             break;
           case 'copy':
             await clipboard.copy(currentMessage);
-            logger.success('Copiado para o clipboard!');
+            logger.success(t('commit.copy_success'));
             break;
           case 'edit':
             step = 'edit';
@@ -160,7 +161,7 @@ export async function commitAction(options: { model?: string } = {}) {
             step = 'generate';
             break;
           case 'cancel':
-            logger.info('Operação cancelada.');
+            logger.info(t('commit.cancel_info'));
             step = 'done';
             break;
         }
@@ -171,7 +172,7 @@ export async function commitAction(options: { model?: string } = {}) {
           {
             type: 'editor',
             name: 'editedMessage',
-            message: 'Edite a mensagem de commit no seu editor:',
+            message: t('commit.edit_prompt'),
             default: currentMessage,
           },
         ]);
