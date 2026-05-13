@@ -17,6 +17,8 @@ export class AnthropicProvider implements AIProvider {
     const prompt = PromptBuilder.buildCommitPrompt(diff, {
       language: this.config.language,
       projectContext: this.config.projectContext,
+      commitLength: this.config.commitLength,
+      emojis: this.config.emojis,
     } as CommitAIConfig);
     
     const response = await this.client.messages.create({

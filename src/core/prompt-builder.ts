@@ -27,9 +27,11 @@ export class PromptBuilder {
 
     const bodyRule = config.commitLength === 'short'
       ? '4. BODY: DO NOT provide a body. Return ONLY the header line.'
-      : `4. BODY: Provide a bulleted list (using "- ") of all significant technical changes included in the diff.
-   - Be descriptive: "Adds validation for email" is better than "Updates validation".
-   - Be factual: Only describe what is actually in the diff. Do not invent business reasons or "why" unless it is obvious from the code changes.`;
+      : `4. BODY: Provide a bulleted list (using "- ") of significant technical changes.
+   - FOCUS on "what" changed technically.
+   - DO NOT repeat file paths or names in every bullet; the context is already in the header scope if applicable.
+   - Keep each bullet point concise and direct (one line each).
+   - Be factual: Only describe what is actually in the diff.`;
 
     const headerFormat = config.emojis
       ? '<type> <emoji>(<scope>): <subject>'
