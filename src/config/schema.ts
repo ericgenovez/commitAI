@@ -11,6 +11,7 @@ export const ConfigSchema = z.object({
     .enum(['conventional', 'angular', 'karma'])
     .default('conventional'),
   emojis: z.boolean().default(true),
+  commitLength: z.enum(['short', 'detailed']).default('detailed'),
   maxDiffLines: z.number().positive().default(600),
   projectContext: z.string().optional(),
   prTemplate: z
