@@ -26,7 +26,7 @@ export async function initAction() {
 
   const configPath = path.join(configDir, 'config.json');
 
-  const { provider, apiKey, language, emojis, commitLength } = await inquirer.prompt([
+  const { provider, apiKey, cliLanguage, language, emojis, commitLength } = await inquirer.prompt([
     {
       type: 'list',
       name: 'provider',
@@ -46,8 +46,19 @@ export async function initAction() {
     },
     {
       type: 'list',
+      name: 'cliLanguage',
+      message: t('init.cli_language_question'),
+      choices: [
+        { name: 'Português (Brasil)', value: 'pt-BR' },
+        { name: 'English', value: 'en' },
+        { name: 'Español', value: 'es' },
+      ],
+      default: 'pt-BR',
+    },
+    {
+      type: 'list',
       name: 'language',
-      message: t('init.language_question'),
+      message: t('init.output_language_question'),
       choices: [
         { name: 'Português (Brasil)', value: 'pt-BR' },
         { name: 'English', value: 'en' },
@@ -76,6 +87,7 @@ export async function initAction() {
   const config = {
     provider,
     apiKey: apiKey || undefined,
+    cliLanguage,
     language,
     emojis,
     commitLength,

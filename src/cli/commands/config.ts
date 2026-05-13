@@ -91,6 +91,7 @@ async function interactiveConfig() {
         { name: 'Ollama', value: 'ollama' }
       ];
       break;
+    case 'cliLanguage':
     case 'language':
       promptConfig.type = 'list';
       promptConfig.choices = [
