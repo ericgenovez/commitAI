@@ -6,7 +6,7 @@ import es from '../locales/es.json';
 
 export async function initI18n() {
   const config = loadConfig();
-  const lng = config.language || 'en';
+  const lng = config.cliLanguage || config.language || 'en';
 
   await i18next.init({
     lng,
