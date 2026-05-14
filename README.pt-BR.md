@@ -1,6 +1,6 @@
 # @ericgenovez/commitai
 
-O **CommitAI** é uma ferramenta de linha de comando (CLI) profissional projetada para automatizar e padronizar fluxos de trabalho do Git utilizando Inteligência Artificial. A ferramenta analisa suas alterações e gera mensagens de commit e descrições de Pull Request de alta qualidade, seguindo padrões da indústria como **Conventional Commits**.
+O **CommitAI** é uma ferramenta de linha de comando (CLI) profissional projetada para automatizar e padronizar seu fluxo de trabalho de desenvolvimento utilizando Inteligência Artificial. A ferramenta analisa suas alterações e gera mensagens de commit e descrições de Pull Request de alta qualidade, seguindo padrões da indústria como **Conventional Commits**.
 
 [![NPM Version](https://img.shields.io/npm/v/@ericgenovez/commitai.svg)](https://www.npmjs.com/package/@ericgenovez/commitai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -13,18 +13,19 @@ O **CommitAI** é uma ferramenta de linha de comando (CLI) profissional projetad
 
 ## 🚀 Funcionalidades Principais
 
+- **Interface Moderna**: Experiência de terminal premium construída com `@clack/prompts`, apresentando fluxos visuais contínuos e indicadores verticais.
+- **Contexto do Projeto**: Configure a **Stack/Contexto do Projeto** (ex: "Frontend React com Tailwind") para que a IA gere descrições tecnicamente mais precisas e relevantes.
+- **Templates Dinâmicos de PR**: Selecione interativamente quais seções incluir no seu Pull Request (O que mudou, Por que mudar, Como testar, Screenshots) a cada execução.
 - **Commits Padronizados**: Gera mensagens baseadas no seu `git diff --staged` utilizando o padrão Conventional Commits.
-- **Mentor de Commits**: Caso o volume de alterações seja muito grande, a ferramenta sugere a separação de arquivos para manter commits atômicos e organizados.
-- **Descrições de PR Inteligentes**: Compara branches e gera descrições detalhadas automaticamente.
-- **Integração com Browser**: Abre a página de criação de Pull Request no GitHub ou GitLab com título e descrição já preenchidos.
-- **Edição Interativa**: Integra-se ao seu editor padrão (VS Code, Vim, etc.) para revisões manuais.
-- **Localização Global**: Toda a interface do CLI está disponível em Inglês, Português e Espanhol.
-- **Suporte a Múltiplos Provedores**: Suporta OpenAI, Anthropic, Google Gemini, DeepSeek e modelos locais via Ollama.
-- **Otimização de Custos**: Ignora automaticamente lockfiles e binários para economizar tokens.
+- **Mentor de Commits**: Sugere a divisão de grandes alterações em commits menores e atômicos para um histórico de projeto mais limpo.
+- **Suporte a Múltiplos Provedores**: Escolha entre OpenAI, Anthropic (Claude), Google Gemini, DeepSeek ou modelos locais via Ollama.
+- **Localização Global**: Interface totalmente localizada em Português, Inglês e Espanhol.
+- **Integração com Browser**: Abre automaticamente as páginas de criação de PR no GitHub/GitLab com título e corpo já preenchidos.
+- **Edição Interativa**: Integração transparente com o editor padrão do seu terminal para ajustes manuais rápidos.
 
 ## 📦 Instalação
 
-A instalação global é feita via NPM:
+Instalação global via NPM:
 
 ```bash
 npm install -g @ericgenovez/commitai
@@ -36,11 +37,11 @@ npm install -g @ericgenovez/commitai
 npx @ericgenovez/commitai commit
 ```
 
-## 🛠️ Guia de Uso
+## 🛠️ Início Rápido
 
 ### 1. Configuração Inicial
 
-Rode o comando abaixo para configurar seu provedor de IA e sua API Key:
+Configure seu provedor de IA, API Key e o contexto do seu projeto:
 
 ```bash
 commitai init
@@ -48,68 +49,52 @@ commitai init
 
 ### 2. Gerar Mensagem de Commit
 
-Após adicionar seus arquivos ao stage (`git add .`), execute:
+Adicione seus arquivos ao stage (`git add .`) e execute:
 
 ```bash
 commitai commit
 ```
 
-A ferramenta apresentará uma sugestão. Você poderá aceitar, editar no seu editor padrão ou regenerar a mensagem.
+A ferramenta apresentará uma sugestão. Você poderá aceitar, editar no seu editor de terminal ou gerar novamente.
 
-### 3. Gerar Pull Request
+### 3. Criar um Pull Request
 
-Para criar uma descrição de PR e abrir no navegador:
+Para gerar uma descrição completa de PR e abrir no navegador:
 
 ```bash
 commitai pr
 ```
 
-O sistema perguntará a branch de destino, gerará o conteúdo e oferecerá a opção de realizar o `push` automático antes de abrir o navegador.
+Siga os prompts para selecionar a branch de destino e as seções desejadas.
 
-## ⚙️ Configurações Avançadas
+## ⚙️ Configuração
 
-Você pode gerenciar as configurações através de um menu interativo completo.
-
-### Usando o comando `config`
-
-Basta executar:
+Gerencie todas as definições através de um menu interativo moderno:
 
 ```bash
 commitai config
 ```
 
-Isso abrirá um menu interativo onde você pode:
+### Opções Disponíveis:
 
-- **🤖 Configurar Provedor de IA**: Fluxo unificado para trocar Provedor, Modelo e API Key de uma só vez.
-- **🌐 Mudar Idioma do CLI**: Altera instantaneamente o idioma da interface do terminal.
-- **Ajustar outras opções**: Refinar uso de emojis, estilo de commit, convenções e mais.
-
-### Chaves Suportadas (para uso via CLI)
-
-- `provider`: `openai`, `anthropic`, `gemini`, `deepseek`, `ollama`
-- `model`: Modelo de IA (ex: `gpt-5-mini`, `gemini-2.0-flash`, `claude-3-5-sonnet`)
-- `language`: Idioma de saída da IA (`en`, `pt-BR`, `es`)
-- `cliLanguage`: Idioma da interface do terminal (`en`, `pt-BR`, `es`)
-- `commitLength`: `short` ou `detailed`
-- `emojis`: `true` ou `false`
-- `maxDiffLines`: Limite de linhas processadas (Padrão: `600`)
+- **🤖 Configurar Provedor de IA**: Configure sequencialmente Provedor, Modelo e API Key.
+- **📁 Contexto do Projeto**: Defina sua stack tecnológica para melhorar a precisão da IA.
+- **🌐 Mudar Idioma do CLI**: Altere instantaneamente o idioma da interface.
+- **Ajustar outras opções**: Refine o uso de emojis, estilos de commit e limites de linhas.
 
 ## 🤖 IA Local com Ollama
 
-O CommitAI suporta execução local via Ollama.
+O CommitAI suporta execução local para maior privacidade e economia:
 
 1. Instale o [Ollama](https://ollama.ai/).
-2. Baixe um modelo (ex: `ollama pull llama3`).
-3. Rode `commitai init`, selecione `Ollama` e insira `llama3` como modelo.
+2. Baixe o modelo desejado (ex: `ollama pull llama3`).
+3. Rode `commitai init`, selecione **Ollama** e insira `llama3` como modelo.
 
 ## 🛠️ Desenvolvimento
 
 ```bash
 # Instalação de dependências
 npm install
-
-# Execução em modo desenvolvimento
-npm run dev -- commit
 
 # Build de produção
 npm run build

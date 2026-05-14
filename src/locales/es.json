@@ -22,7 +22,8 @@
     "emojis_question": "¿Habilitar emojis en los mensajes?",
     "length_question": "Estilo de los mensajes de commit:",
     "length_short": "📝 Corto (Solo título)",
-    "length_detailed": "📄 Detallado (Título + Lista de cambios)",
+    "length_detailed": "📄 Detalhado (Título + Lista de cambios)",
+    "context_question": "Stack/Contexto del proyecto (ej: Next.js, TypeScript):",
     "success": "\n✅ Configuración guardada con éxito en: {{path}}",
     "next_steps": "¡Ahora ya puede usar \"commitai commit\" para generar sus mensajes!"
   },
@@ -105,12 +106,17 @@
     "action_browser": "🌐 Abrir en el navegador",
     "action_branch": "🔄 Volver a la selección de rama",
     "suggested_description_title": " 📝 Descripción del PR ",
+    "sections_question": "Seleccione las secciones para incluir en la descripción del PR:",
+    "section_what": "Qué cambió",
+    "section_why": "Por qué este cambio",
+    "section_how_to_test": "Cómo probar",
+    "section_screenshots": "Screenshots",
     "copy_info": "Descripción copiada para facilitar el llenado.",
     "gh_success": "¡PR creado con éxito!",
     "gh_fail": "Error al usar GitHub CLI.",
     "gh_creating": "Creando PR vía GitHub CLI...",
     "edit_prompt": "Edite la descripción del PR en su editor:",
     "diff_fetching": "Obteniendo diff con la rama {{branch}}...",
-    "diff_too_large": "El diff es demasiado grande ({{lines}} líneas) y fue truncado a {{max}} líneas."
+    "diff_too_large": "El diff es demasiado grande ({{lines}} líneas) e fue truncado a {{max}} líneas."
   }
 }

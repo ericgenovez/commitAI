@@ -1,6 +1,6 @@
 # @ericgenovez/commitai
 
-**CommitAI** is a professional Command Line Interface (CLI) designed to automate and standardize Git workflows using Artificial Intelligence. It analyzes your changes and generates high-quality commit messages and Pull Request descriptions following industry standards like **Conventional Commits**.
+**CommitAI** is a professional Command Line Interface (CLI) designed to automate and standardize your development workflow using Artificial Intelligence. It analyzes your changes and generates high-quality commit messages and Pull Request descriptions, following industry standards like **Conventional Commits**.
 
 [![NPM Version](https://img.shields.io/npm/v/@ericgenovez/commitai.svg)](https://www.npmjs.com/package/@ericgenovez/commitai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -13,18 +13,19 @@
 
 ## 🚀 Key Features
 
+- **Modern Interface**: Premium terminal experience built with `@clack/prompts`, featuring continuous visual flows and vertical indicators.
+- **Project Awareness**: Configure your **Project Stack/Context** (e.g., "React frontend with Tailwind") to help the AI provide more accurate and technically relevant descriptions.
+- **Dynamic PR Templates**: Interactively select which sections to include in your Pull Request (What, Why, How to Test, Screenshots) on every run.
 - **Standardized Commits**: Generates messages based on your `git diff --staged` using the Conventional Commits pattern.
-- **Commit Mentor**: Suggests splitting large commits to maintain atomic and organized history.
-- **Smart PR Descriptions**: Compares branches and generates detailed descriptions automatically.
-- **Browser Integration**: Opens GitHub/GitLab PR creation pages with title and description pre-filled.
-- **Interactive Editing**: Integrates with your default editor (VS Code, Vim, etc.) for manual reviews.
-- **Global Localization**: The entire CLI interface is available in English, Portuguese, and Spanish.
-- **Multi-Provider Support**: Supports OpenAI, Anthropic, Google Gemini, DeepSeek, and local models via Ollama.
-- **Cost Optimization**: Automatically ignores lockfiles and binaries to save tokens and costs.
+- **Commit Mentor**: Suggests splitting large diffs into smaller, atomic commits for a cleaner project history.
+- **Multi-Provider Support**: Choose between OpenAI, Anthropic (Claude), Google Gemini, DeepSeek, or local models via Ollama.
+- **Global Localization**: Fully localized interface available in English, Portuguese, and Spanish.
+- **Browser Integration**: Automatically opens PR creation pages on GitHub/GitLab with title and body pre-filled.
+- **Interactive Editing**: Seamlessly integrates with your default terminal editor for manual fine-tuning.
 
 ## 📦 Installation
 
-Global installation via NPM:
+Install globally via NPM:
 
 ```bash
 npm install -g @ericgenovez/commitai
@@ -36,11 +37,11 @@ npm install -g @ericgenovez/commitai
 npx @ericgenovez/commitai commit
 ```
 
-## 🛠️ Usage Guide
+## 🛠️ Quick Start
 
 ### 1. Initial Setup
 
-Run the command below to configure your AI provider and your API Key:
+Configure your AI provider, API Key, and Project Context:
 
 ```bash
 commitai init
@@ -48,68 +49,52 @@ commitai init
 
 ### 2. Generate Commit Message
 
-After adding your files to the stage (`git add .`), run:
+Stage your changes (`git add .`) and run:
 
 ```bash
 commitai commit
 ```
 
-The tool will present a suggestion. You can accept, edit in your default editor, or regenerate it.
+The tool will present a suggestion. You can accept, edit in your terminal editor, or regenerate it.
 
-### 3. Generate Pull Request
+### 3. Create a Pull Request
 
-To create a PR description and open it in the browser:
+To generate a comprehensive PR description and open it in your browser:
 
 ```bash
 commitai pr
 ```
 
-The system will ask for the destination branch, generate the content, and offer to `push` before opening the browser.
+Follow the prompts to select the target branch and the desired sections.
 
-## ⚙️ Advanced Configuration
+## ⚙️ Configuration
 
-You can manage settings granularly through an interactive menu.
-
-### Using the `config` command
-
-Simply run:
+Manage all settings through a modern, interactive menu:
 
 ```bash
 commitai config
 ```
 
-This opens an interactive menu where you can:
+### Available Options:
 
-- **🤖 Configure AI Provider**: Unified flow to change Provider, Model, and API Key at once.
-- **🌐 Change CLI Language**: Instantly switch the terminal interface language.
-- **Adjust other settings**: Fine-tune emojis, commit style, conventions, and more.
-
-### Supported Keys (for CLI usage)
-
-- `provider`: `openai`, `anthropic`, `gemini`, `deepseek`, `ollama`
-- `model`: AI Model (e.g., `gpt-5-mini`, `gemini-2.0-flash`, `claude-3-5-sonnet`)
-- `language`: AI Output language (`en`, `pt-BR`, `es`)
-- `cliLanguage`: Terminal interface language (`en`, `pt-BR`, `es`)
-- `commitLength`: `short` or `detailed`
-- `emojis`: `true` or `false`
-- `maxDiffLines`: Line limit for processing (Default: `600`)
+- **🤖 Configure AI Provider**: Sequentially set up Provider, Model, and API Key.
+- **📁 Project Context**: Define your technology stack to improve AI precision.
+- **🌐 Change CLI Language**: Instantly switch the interface language.
+- **Adjust other settings**: Fine-tune emoji usage, commit styles, and line limits.
 
 ## 🤖 Local AI with Ollama
 
-CommitAI supports local execution using Ollama.
+CommitAI supports local execution for privacy and cost savings:
 
 1. Install [Ollama](https://ollama.ai/).
-2. Pull a model (e.g., `ollama pull llama3`).
-3. Run `commitai init`, select `Ollama`, and enter `llama3` as the model.
+2. Pull your preferred model (e.g., `ollama pull llama3`).
+3. Run `commitai init`, select **Ollama**, and enter `llama3` as the model.
 
 ## 🛠️ Development
 
 ```bash
 # Install dependencies
 npm install
-
-# Run in development mode
-npm run dev -- commit
 
 # Build for production
 npm run build
