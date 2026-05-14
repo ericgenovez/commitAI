@@ -1,4 +1,4 @@
-import inquirer from 'inquirer';
+import * as p from '@clack/prompts';
 import { gitManager } from '../../core/git';
 import { loadConfig } from '../../config/loader';
 import { ProviderFactory } from '../../providers/factory';
@@ -10,6 +10,27 @@ import { formatUsage, getModelTier } from '../../utils/costs';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { t } from '../../utils/i18n';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { spawn } from 'child_process';
+
+async function editInExternalEditor(initialContent: string): Promise<string> {
+  const tempDir = os.tmpdir();
+  const tempFile = path.join(tempDir, `commitai_edit_${Date.now()}.txt`);
+  fs.writeFileSync(tempFile, initialContent);
+
+  const editor = process.env.EDITOR || 'vi';
+
+  return new Promise((resolve) => {
+    const child = spawn(editor, [tempFile], { stdio: 'inherit' });
+    child.on('exit', () => {
+      const editedContent = fs.readFileSync(tempFile, 'utf-8');
+      fs.unlinkSync(tempFile);
+      resolve(editedContent.trim());
+    });
+  });
+}
 
 export async function commitAction(options: { model?: string } = {}) {
   try {
@@ -22,14 +43,12 @@ export async function commitAction(options: { model?: string } = {}) {
 
     if (!config.apiKey && !process.env.VITEST) {
       logger.warn(t('common.api_key_not_found'));
-      const { runInit } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'runInit',
-          message: t('common.configure_now'),
-          default: true,
-        },
-      ]);
+      const runInit = await p.confirm({
+        message: t('common.configure_now'),
+        initialValue: true,
+      });
+
+      if (p.isCancel(runInit)) return;
 
       if (runInit) {
         await initAction();
@@ -55,33 +74,30 @@ export async function commitAction(options: { model?: string } = {}) {
     if (diff.split('\n').length > config.maxDiffLines) {
       logger.warn(t('commit.diff_too_large', { lines: diff.split('\n').length }));
       
-      const { shouldFilter } = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'shouldFilter',
-          message: t('commit.filter_question'),
-          default: true,
-        },
-      ]);
+      const shouldFilter = await p.confirm({
+        message: t('commit.filter_question'),
+        initialValue: true,
+      });
+
+      if (p.isCancel(shouldFilter)) return;
 
       if (shouldFilter) {
         const stagedFiles = await gitManager.getStagedFiles();
-        const { selectedFiles } = await inquirer.prompt([
-          {
-            type: 'checkbox',
-            name: 'selectedFiles',
-            message: t('commit.select_files'),
-            choices: stagedFiles,
-            validate: (input) => input.length > 0 || t('common.select_at_least_one'),
-          },
-        ]);
+        const selectedFiles = await p.multiselect({
+          message: t('commit.select_files'),
+          options: stagedFiles.map(f => ({ label: f, value: f })),
+          required: true,
+        });
 
-        const filesToUnstage = stagedFiles.filter(f => !selectedFiles.includes(f));
+        if (p.isCancel(selectedFiles)) return;
+
+        const filesToUnstage = stagedFiles.filter(f => !(selectedFiles as string[]).includes(f));
         if (filesToUnstage.length > 0) {
-          const spinner = logger.spinner(t('commit.unstage_spinner'));
+          const s = p.spinner();
+          s.start(t('commit.unstage_spinner'));
           await gitManager.unstageFiles(filesToUnstage);
           diff = await gitManager.getStagedDiff();
-          spinner.succeed(t('commit.unstage_success', { selected: selectedFiles.length, removed: filesToUnstage.length }));
+          s.stop(t('commit.unstage_success', { selected: (selectedFiles as string[]).length, removed: filesToUnstage.length }));
         }
       } else {
         logger.info(chalk.dim(t('commit.proceed_truncated', { max: config.maxDiffLines })));
@@ -97,15 +113,16 @@ export async function commitAction(options: { model?: string } = {}) {
 
     while (step !== 'done') {
       if (step === 'generate') {
-        const spinner = logger.spinner(t('commit.generating', { provider: chalk.cyan(config.provider) }));
+        const s = p.spinner();
+        s.start(t('commit.generating', { provider: chalk.cyan(config.provider) }));
         try {
           const response = await provider.generateCommitMessage(truncatedDiff);
           currentMessage = response.content;
           currentUsage = response.usage;
-          spinner.succeed(t('commit.ready'));
+          s.stop(t('commit.ready'));
           step = 'review';
         } catch (error: any) {
-          spinner.fail(t('commit.fail'));
+          s.stop(t('commit.fail'), 1);
           logger.error(error.message);
           return;
         }
@@ -142,25 +159,26 @@ export async function commitAction(options: { model?: string } = {}) {
           console.log(chalk.dim(`  📊 ${usageText} | 🏷️  ${getModelTier(config.model)}\n`));
         }
 
-        const { action } = await inquirer.prompt([
-          {
-            type: 'list',
-            name: 'action',
-            message: t('commit.action_question'),
-            choices: [
-              { name: t('commit.action_commit'), value: 'commit' },
-              { name: t('commit.action_copy'), value: 'copy' },
-              { name: t('commit.action_edit'), value: 'edit' },
-              { name: t('commit.action_generate'), value: 'generate' },
-              { name: t('commit.action_cancel'), value: 'cancel' },
-            ],
-          },
-        ]);
+        const action = await p.select({
+          message: t('commit.action_question'),
+          options: [
+            { label: t('commit.action_commit'), value: 'commit' },
+            { label: t('commit.action_copy'), value: 'copy' },
+            { label: t('commit.action_edit'), value: 'edit' },
+            { label: t('commit.action_generate'), value: 'generate' },
+            { label: chalk.red(t('commit.action_cancel')), value: 'cancel' },
+          ],
+        });
+
+        if (p.isCancel(action)) {
+          step = 'done';
+          continue;
+        }
 
         switch (action) {
           case 'commit':
             await gitManager.commit(currentMessage);
-            logger.success(t('commit.commit_success'));
+            p.outro(t('commit.commit_success'));
             step = 'done';
             break;
           case 'copy':
@@ -175,23 +193,15 @@ export async function commitAction(options: { model?: string } = {}) {
             step = 'generate';
             break;
           case 'cancel':
-            logger.info(t('commit.cancel_info'));
+            p.outro(t('commit.cancel_info'));
             step = 'done';
             break;
         }
       }
 
       if (step === 'edit') {
-        const { editedMessage } = await inquirer.prompt([
-          {
-            type: 'editor',
-            name: 'editedMessage',
-            message: t('commit.edit_prompt'),
-            default: currentMessage,
-          },
-        ]);
-        
-        if (editedMessage && editedMessage.trim()) {
+        const editedMessage = await editInExternalEditor(currentMessage);
+        if (editedMessage) {
           currentMessage = editedMessage;
         }
         step = 'review';
