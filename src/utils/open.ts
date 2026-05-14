@@ -8,8 +8,10 @@ export async function openInBrowser(url: string): Promise<void> {
   let command = '';
 
   if (platform === 'win32') {
-    // No Windows, o PowerShell é muito mais confiável para abrir URLs complexas
-    command = `powershell -NoProfile -Command "Start-Process \\"${url}\\""`;
+    // No Windows, o 'start' do cmd é mais resiliente para URLs extremamente longas
+    // Usamos aspas duplas vazias como primeiro argumento pois o 'start' interpreta 
+    // o primeiro par de aspas como o título da janela.
+    command = `cmd /c start "" "${url.replace(/&/g, '^&')}"`;
   } else if (platform === 'darwin') {
     command = `open "${url}"`;
   } else {
