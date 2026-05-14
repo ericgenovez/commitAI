@@ -265,9 +265,16 @@ export async function prAction(options: { model?: string } = {}) {
               if (prUrl) {
                 await clipboard.copy(currentPRDescription);
                 logger.info(t('pr.copy_info'));
-                await openInBrowser(prUrl);
-                logger.success(t('pr.browser_success'));
+                console.log(chalk.dim(`  🔗 URL gerada: ${prUrl}`));
+                try {
+                  await openInBrowser(prUrl);
+                  logger.success(t('pr.browser_success'));
+                } catch (error: any) {
+                  logger.error(`${t('pr.browser_fail') || 'Erro ao abrir navegador:'} ${error.message}`);
+                }
                 step = 'done';
+              } else {
+                logger.error('Não foi possível gerar a URL do PR. Verifique se o remote está configurado corretamente.');
               }
             }
             break;
