@@ -55,6 +55,7 @@ async function interactiveConfig() {
     return;
   }
 
+  logger.banner();
   p.intro(chalk.bold(t('config.list_title', { path: configPath })));
 
   let shouldExit = false;
@@ -145,6 +146,8 @@ async function interactiveConfig() {
         newValue = await p.confirm({
           message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
           initialValue: config[keyToEdit],
+          active: t('common.yes'),
+          inactive: t('common.no'),
         });
         break;
       case 'maxDiffLines':

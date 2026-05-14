@@ -46,6 +46,8 @@ export async function commitAction(options: { model?: string } = {}) {
       const runInit = await p.confirm({
         message: t('common.configure_now'),
         initialValue: true,
+        active: t('common.yes'),
+        inactive: t('common.no'),
       });
 
       if (p.isCancel(runInit)) return;
@@ -77,6 +79,8 @@ export async function commitAction(options: { model?: string } = {}) {
       const shouldFilter = await p.confirm({
         message: t('commit.filter_question'),
         initialValue: true,
+        active: t('common.yes'),
+        inactive: t('common.no'),
       });
 
       if (p.isCancel(shouldFilter)) return;

@@ -54,8 +54,11 @@ GIT DIFF:
 ${diff}`;
   }
 
-  static buildPRPrompt(diff: string, sections: string[], language: string): string {
+  static buildPRPrompt(diff: string, sections: string[], language: string, projectContext?: string): string {
+    const context = projectContext ? `PROJECT CONTEXT:\n${projectContext}\n` : '';
     return `You are an expert developer. Generate a professional Pull Request description in ${language} for the following diff:
+${context}
+GIT DIFF:
 ${diff}
 
 STRICT RULES:

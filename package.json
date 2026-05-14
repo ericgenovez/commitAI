@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
+    "@clack/prompts": "^1.4.0",
     "@google/genai": "^2.2.0",
     "axios": "^1.7.9",
     "boxen": "^5.1.2",
@@ -42,7 +43,6 @@
     "figlet": "^1.11.0",
     "gradient-string": "^3.0.0",
     "i18next": "^26.1.0",
-    "inquirer": "^8.2.6",
     "openai": "^4.83.0",
     "ora": "^5.4.1",
     "simple-git": "^3.27.0",
@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@types/figlet": "^1.7.0",
-    "@types/inquirer": "^8.2.10",
     "@types/node": "^22.10.1",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",
