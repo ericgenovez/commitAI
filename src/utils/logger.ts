@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import ora, { Ora } from 'ora';
 import gradient from 'gradient-string';
 import figlet from 'figlet';
+import * as p from '@clack/prompts';
 
 export const logger = {
   info: (msg: string) => console.log(chalk.blue('ℹ'), msg),
@@ -23,4 +24,9 @@ export const logger = {
       color: 'cyan',
     }).start();
   },
+
+  // Helper for clack-style alerts within its flow
+  note: (msg: string, title?: string) => {
+    p.note(msg, title);
+  }
 };

@@ -42,8 +42,13 @@ export class OpenAICompatibleProvider implements AIProvider {
     };
   }
 
-  async generatePRDescription(diff: string): Promise<AIResponse> {
-    const prompt = PromptBuilder.buildPRPrompt(diff, this.config.prSections, this.config.language);
+  async generatePRDescription(diff: string, sections: string[]): Promise<AIResponse> {
+    const prompt = PromptBuilder.buildPRPrompt(
+      diff,
+      sections,
+      this.config.language,
+      this.config.projectContext,
+    );
 
     const response = await this.client.chat.completions.create({
       model: this.config.model,

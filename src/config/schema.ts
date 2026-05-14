@@ -13,7 +13,7 @@ export const ConfigSchema = z.object({
     .default('conventional'),
   emojis: z.boolean().default(true),
   commitLength: z.enum(['short', 'detailed']).default('detailed'),
-  maxDiffLines: z.number().positive().default(600),
+  maxDiffLines: z.number().positive().default(1000),
   projectContext: z.string().optional(),
   prTemplate: z
     .object({

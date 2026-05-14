@@ -1,8 +1,8 @@
+import * as p from '@clack/prompts';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
 import { logger } from '../../utils/logger';
 import { ConfigSchema, CommitAIConfig } from '../../config/schema';
 import { t } from '../../utils/i18n';
@@ -55,20 +55,19 @@ async function interactiveConfig() {
     return;
   }
 
-  const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  logger.banner();
+  p.intro(chalk.bold(t('config.list_title', { path: configPath })));
 
-  logger.info(chalk.bold(t('config.list_title', { path: configPath })) + '\n');
+  let shouldExit = false;
 
-  const { keyToEdit } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'keyToEdit',
+  while (!shouldExit) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+
+    const keyToEdit = await p.select({
       message: t('config.select_to_edit'),
-      pageSize: 15,
-      choices: [
-        { name: t('config.setup_ai'), value: 'setup_ai' },
-        { name: t('config.change_language'), value: 'change_language' },
-        new inquirer.Separator(t('config.other_settings')),
+      options: [
+        { label: t('config.setup_ai'), value: 'setup_ai' },
+        { label: t('config.change_language'), value: 'change_language' },
         ...Object.entries(config)
           .filter(
             ([k]) =>
@@ -84,164 +83,149 @@ async function interactiveConfig() {
             else if (typeof val === 'object') displayValue = JSON.stringify(val);
 
             return {
-              name: `${chalk.cyan(friendlyName)}: ${chalk.white(displayValue)}`,
+              label: `${friendlyName}: ${chalk.dim(displayValue)}`,
               value: key,
             };
           }),
-        new inquirer.Separator(),
-        { name: t('config.exit'), value: 'exit' },
+        { label: chalk.red(t('config.exit')), value: 'exit' },
       ],
-    },
-  ]);
+    });
 
-  if (keyToEdit === 'exit') return;
+    if (p.isCancel(keyToEdit) || keyToEdit === 'exit') {
+      shouldExit = true;
+      continue;
+    }
 
-  if (keyToEdit === 'setup_ai') {
-    const success = await setupAIProvider(config);
-    return interactiveConfig(); // Recursive call for "Back" behavior
+    if (keyToEdit === 'setup_ai') {
+      await setupAIProvider(config);
+      continue;
+    }
+
+    if (keyToEdit === 'change_language') {
+      await changeCLILanguage(config);
+      continue;
+    }
+
+    // Handle individual settings
+    let newValue: any;
+
+    switch (keyToEdit) {
+      case 'language':
+        newValue = await p.select({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: config[keyToEdit],
+          options: [
+            { label: 'Português (Brasil)', value: 'pt-BR' },
+            { label: 'English', value: 'en' },
+            { label: 'Español', value: 'es' },
+          ],
+        });
+        break;
+      case 'convention':
+        newValue = await p.select({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: config[keyToEdit],
+          options: [
+            { label: 'Conventional Commits', value: 'conventional' },
+            { label: 'Angular', value: 'angular' },
+            { label: 'Karma', value: 'karma' },
+          ],
+        });
+        break;
+      case 'commitLength':
+        newValue = await p.select({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: config[keyToEdit],
+          options: [
+            { label: t('config.value_short'), value: 'short' },
+            { label: t('config.value_detailed'), value: 'detailed' },
+          ],
+        });
+        break;
+      case 'emojis':
+        newValue = await p.confirm({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: config[keyToEdit],
+          active: t('common.yes'),
+          inactive: t('common.no'),
+        });
+        break;
+      case 'maxDiffLines':
+        newValue = await p.text({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: String(config[keyToEdit]),
+          validate: (val: string) => !isNaN(Number(val)) ? undefined : t('common.invalid_input'),
+        });
+        if (!p.isCancel(newValue)) newValue = Number(newValue);
+        break;
+      default:
+        newValue = await p.text({
+          message: t('config.enter_new_value', { key: t(`config.label_${keyToEdit}`) || keyToEdit }),
+          initialValue: String(config[keyToEdit]),
+        });
+    }
+
+    if (p.isCancel(newValue)) continue;
+
+    setConfigValue(keyToEdit as string, newValue);
   }
 
-  if (keyToEdit === 'change_language') {
-    await changeCLILanguage(config);
-    return interactiveConfig(); // Recursive call for "Back" behavior
-  }
-
-  let promptConfig: any = {
-    name: 'newValue',
-    message: t('config.enter_new_value', {
-      key: t(`config.label_${keyToEdit}`) || keyToEdit,
-    }),
-    default: config[keyToEdit],
-  };
-
-  // Customize prompt type based on the key
-  switch (keyToEdit) {
-    case 'language':
-      promptConfig.type = 'list';
-      promptConfig.choices = [
-        { name: 'Português (Brasil)', value: 'pt-BR' },
-        { name: 'English', value: 'en' },
-        { name: 'Español', value: 'es' },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ];
-      break;
-    case 'convention':
-      promptConfig.type = 'list';
-      promptConfig.choices = [
-        { name: 'Conventional Commits', value: 'conventional' },
-        { name: 'Angular', value: 'angular' },
-        { name: 'Karma', value: 'karma' },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ];
-      break;
-    case 'commitLength':
-      promptConfig.type = 'list';
-      promptConfig.choices = [
-        { name: t('config.value_short'), value: 'short' },
-        { name: t('config.value_detailed'), value: 'detailed' },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ];
-      break;
-    case 'emojis':
-      promptConfig.type = 'list';
-      promptConfig.choices = [
-        { name: t('config.value_true'), value: true },
-        { name: t('config.value_false'), value: false },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ];
-      break;
-    case 'maxDiffLines':
-      promptConfig.type = 'input';
-      promptConfig.validate = (val: string) =>
-        !isNaN(Number(val)) || t('common.invalid_input');
-      break;
-    default:
-      promptConfig.type = 'input';
-  }
-
-  const { newValue } = await inquirer.prompt([promptConfig]);
-
-  if (newValue === 'back') return interactiveConfig();
-
-  setConfigValue(keyToEdit, newValue);
-  return interactiveConfig(); // Return to menu after editing
+  p.outro(t('common.cancel_info'));
 }
 
-async function setupAIProvider(currentConfig: any): Promise<boolean> {
-  const { provider } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'provider',
-      message: t('init.provider_question'),
-      default: currentConfig.provider,
-      choices: [
-        { name: 'OpenAI', value: 'openai' },
-        { name: 'Anthropic (Claude)', value: 'anthropic' },
-        { name: 'Google (Gemini)', value: 'gemini' },
-        { name: 'DeepSeek', value: 'deepseek' },
-        { name: 'Ollama (Local)', value: 'ollama' },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ],
-    },
-  ]);
+async function setupAIProvider(currentConfig: any) {
+  const provider = await p.select({
+    message: t('init.provider_question'),
+    initialValue: currentConfig.provider,
+    options: [
+      { label: 'OpenAI', value: 'openai' },
+      { label: 'Anthropic (Claude)', value: 'anthropic' },
+      { label: 'Google (Gemini)', value: 'gemini' },
+      { label: 'DeepSeek', value: 'deepseek' },
+      { label: 'Ollama (Local)', value: 'ollama' },
+    ],
+  });
 
-  if (provider === 'back') return false;
+  if (p.isCancel(provider)) return;
 
   let defaultModel = currentConfig.model;
   if (provider === 'openai') defaultModel = 'gpt-5-mini';
   if (provider === 'gemini') defaultModel = 'gemini-2.0-flash';
   if (provider === 'anthropic') defaultModel = 'claude-3-5-sonnet-latest';
 
-  const { model } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'model',
-      message: t('config.model_question'),
-      default: defaultModel,
-    },
-  ]);
+  const model = await p.text({
+    message: t('config.model_question'),
+    initialValue: defaultModel,
+  });
 
-  const { apiKey } = await inquirer.prompt([
-    {
-      type: 'password',
-      name: 'apiKey',
-      message: t('init.apikey_question'),
-      mask: '*',
-    },
-  ]);
+  if (p.isCancel(model)) return;
+
+  const apiKey = await p.password({
+    message: t('init.apikey_question'),
+  });
+
+  if (p.isCancel(apiKey)) return;
 
   const updates: any = { provider, model };
   if (apiKey) updates.apiKey = apiKey;
 
   setMultipleConfigValues(updates);
-  return true;
 }
 
 async function changeCLILanguage(currentConfig: any) {
-  const { cliLanguage } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'cliLanguage',
-      message: t('init.cli_language_question'),
-      default: currentConfig.cliLanguage,
-      choices: [
-        { name: 'Português (Brasil)', value: 'pt-BR' },
-        { name: 'English', value: 'en' },
-        { name: 'Español', value: 'es' },
-        new inquirer.Separator(),
-        { name: t('config.back'), value: 'back' }
-      ],
-    },
-  ]);
+  const cliLanguage = await p.select({
+    message: t('init.cli_language_question'),
+    initialValue: currentConfig.cliLanguage,
+    options: [
+      { label: 'Português (Brasil)', value: 'pt-BR' },
+      { label: 'English', value: 'en' },
+      { label: 'Español', value: 'es' },
+    ],
+  });
 
-  if (cliLanguage === 'back') return;
+  if (p.isCancel(cliLanguage)) return;
 
-  setConfigValue('cliLanguage', cliLanguage);
+  setConfigValue('cliLanguage', cliLanguage as string);
 }
 
 function setMultipleConfigValues(updates: Record<string, any>) {
