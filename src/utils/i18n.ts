@@ -16,6 +16,9 @@ export async function initI18n() {
       'pt-BR': { translation: ptBR },
       es: { translation: es },
     },
+    interpolation: {
+      escapeValue: false,
+    },
   });
 }
 
