@@ -9,7 +9,7 @@ export async function openInBrowser(url: string): Promise<void> {
 
   if (platform === 'win32') {
     // No Windows, o PowerShell é muito mais confiável para abrir URLs complexas
-    command = `powershell -NoProfile -Command "Start-Process '${url}'"`;
+    command = `powershell -NoProfile -Command "Start-Process \\"${url}\\""`;
   } else if (platform === 'darwin') {
     command = `open "${url}"`;
   } else {
